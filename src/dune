@@ -1,0 +1,5 @@
+(library
+  (name evm_analyzer)
+  (libraries core)
+  (preprocess (pps ppx_let ppx_deriving ppx_deriving.show))
+  (public_name evm_analyzer))

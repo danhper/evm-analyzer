@@ -1,0 +1,15 @@
+opam-version: "2.0"
+name: "evm-analyzer"
+version: "0.1"
+synopsis: "Analysis tool for EVM"
+maintainer: "Daniel Perez <daniel@perez.sh>"
+authors: "Daniel Perez <daniel@perez.sh>"
+license: "MIT"
+homepage: "https://github.com/danhper/evm-analyzer"
+bug-reports: "https://github.com/danhper/evm-analyzer"
+build: ["dune" "build" "--root" "." "-j" jobs "@install"]
+depends: [
+  "core"                {>= "v0.11" & < "v0.12"}
+
+  "dune"                {build & >= "1.0" & < "2.0"}
+]
