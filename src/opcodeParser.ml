@@ -16,11 +16,9 @@ let consume t ~bytes =
   else
     let bytecode = String.sub t.bytecode ~pos:t.index ~len in
     t.index <- t.index + len;
-    "0x" ^ bytecode
+    Int.Hex.of_string ("0x" ^ bytecode)
 
-let consume_opcode t =
-  let opcode = consume ~bytes:1 t in
-  Int.Hex.of_string opcode
+let consume_opcode t = consume ~bytes:1 t
 
 let consume_full_opcode t =
   let open Opcode in
