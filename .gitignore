@@ -30,3 +30,4 @@ setup.log
 # End of https://www.gitignore.io/api/ocaml
 
 evm_analyzer.install
+fixtures/
