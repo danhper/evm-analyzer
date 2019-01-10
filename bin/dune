@@ -1,4 +1,4 @@
 (executable
   (name main)
   (libraries evm_analyzer)
-  (public_name evm_analyzer))
+  (public_name evm-analyzer))
