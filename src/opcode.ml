@@ -168,12 +168,13 @@ type t =
   | Unknown of String.t      (* unknown opcodes *)
   [@@deriving show { with_path = false }]
 
-let to_string t =
+let to_string ?(split_instructions=false) t =
   let str = show t in
   match String.split ~on:' ' str with
   | [opcode] -> String.uppercase opcode
   | [opcode; value] ->
     let opcode = String.uppercase (String.drop_prefix opcode 1) in
     let value = String.strip ~drop:((=) '"') (String.drop_suffix value 1) in
-    opcode ^ " " ^ value
+    let sep = if split_instructions then "\n" else " " in
+    opcode ^ sep ^ value
   | _ -> str
