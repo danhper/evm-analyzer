@@ -69,72 +69,11 @@ type t =
   | Gas          (* get the amount of available gas *)
   | Jumpdest     (* set a potential jump destination *)
 
-  | Push1 of String.t        (* place 1 byte item on stack *)
-  | Push2 of String.t        (* place 2 byte item on stack *)
-  | Push3 of String.t        (* place 3 byte item on stack *)
-  | Push4 of String.t        (* place 4 byte item on stack *)
-  | Push5 of String.t        (* place 5 byte item on stack *)
-  | Push6 of String.t        (* place 6 byte item on stack *)
-  | Push7 of String.t        (* place 7 byte item on stack *)
-  | Push8 of String.t        (* place 8 byte item on stack *)
-  | Push9 of String.t        (* place 9 byte item on stack *)
-  | Push10 of String.t       (* place 10 byte item on stack *)
-  | Push11 of String.t       (* place 11 byte item on stack *)
-  | Push12 of String.t       (* place 12 byte item on stack *)
-  | Push13 of String.t       (* place 13 byte item on stack *)
-  | Push14 of String.t       (* place 14 byte item on stack *)
-  | Push15 of String.t       (* place 15 byte item on stack *)
-  | Push16 of String.t       (* place 16 byte item on stack *)
-  | Push17 of String.t       (* place 17 byte item on stack *)
-  | Push18 of String.t       (* place 18 byte item on stack *)
-  | Push19 of String.t       (* place 19 byte item on stack *)
-  | Push20 of String.t       (* place 20 byte item on stack *)
-  | Push21 of String.t       (* place 21 byte item on stack *)
-  | Push22 of String.t       (* place 22 byte item on stack *)
-  | Push23 of String.t       (* place 23 byte item on stack *)
-  | Push24 of String.t       (* place 24 byte item on stack *)
-  | Push25 of String.t       (* place 25 byte item on stack *)
-  | Push26 of String.t       (* place 26 byte item on stack *)
-  | Push27 of String.t       (* place 27 byte item on stack *)
-  | Push28 of String.t       (* place 28 byte item on stack *)
-  | Push29 of String.t       (* place 29 byte item on stack *)
-  | Push30 of String.t       (* place 30 byte item on stack *)
-  | Push31 of String.t       (* place 31 byte item on stack *)
-  | Push32 of String.t       (* place 32 byte item on stack *)
+  | Push of Int.t * String.t (* plance n bytes item on the stacks *)
 
-  | Dup1         (* copies the highest item in the stack to the top of the stack *)
-  | Dup2         (* copies the second highest item in the stack to the top of the stack *)
-  | Dup3         (* copies the third highest item in the stack to the top of the stack *)
-  | Dup4         (* copies the 4th highest item in the stack to the top of the stack *)
-  | Dup5         (* copies the 5th highest item in the stack to the top of the stack *)
-  | Dup6         (* copies the 6th highest item in the stack to the top of the stack *)
-  | Dup7         (* copies the 7th highest item in the stack to the top of the stack *)
-  | Dup8         (* copies the 8th highest item in the stack to the top of the stack *)
-  | Dup9         (* copies the 9th highest item in the stack to the top of the stack *)
-  | Dup10        (* copies the 10th highest item in the stack to the top of the stack *)
-  | Dup11        (* copies the 11th highest item in the stack to the top of the stack *)
-  | Dup12        (* copies the 12th highest item in the stack to the top of the stack *)
-  | Dup13        (* copies the 13th highest item in the stack to the top of the stack *)
-  | Dup14        (* copies the 14th highest item in the stack to the top of the stack *)
-  | Dup15        (* copies the 15th highest item in the stack to the top of the stack *)
-  | Dup16        (* copies the 16th highest item in the stack to the top of the stack *)
+  | Dup of Int.t   (* copies the nth highest item in the stack to the top of the stack *)
 
-  | Swap1         (* swaps the highest and second highest value on the stack *)
-  | Swap2         (* swaps the highest and third highest value on the stack *)
-  | Swap3         (* swaps the highest and 4th highest value on the stack *)
-  | Swap4         (* swaps the highest and 5th highest value on the stack *)
-  | Swap5         (* swaps the highest and 6th highest value on the stack *)
-  | Swap6         (* swaps the highest and 7th highest value on the stack *)
-  | Swap7         (* swaps the highest and 8th highest value on the stack *)
-  | Swap8         (* swaps the highest and 9th highest value on the stack *)
-  | Swap9         (* swaps the highest and 10th highest value on the stack *)
-  | Swap10        (* swaps the highest and 11th highest value on the stack *)
-  | Swap11        (* swaps the highest and 12th highest value on the stack *)
-  | Swap12        (* swaps the highest and 13th highest value on the stack *)
-  | Swap13        (* swaps the highest and 14th highest value on the stack *)
-  | Swap14        (* swaps the highest and 15th highest value on the stack *)
-  | Swap15        (* swaps the highest and 16th highest value on the stack *)
-  | Swap16        (* swaps the highest and 17th highest value on the stack *)
+  | Swap of Int.t  (* swaps the highest and second highest value on the stack *)
 
   | Log0        (* Makes a log entry; no topics. *)
   | Log1        (* Makes a log entry; 1 topic. *)
@@ -168,13 +107,13 @@ type t =
   | Unknown of String.t      (* unknown opcodes *)
   [@@deriving show { with_path = false }]
 
-let to_string ?(split_instructions=false) t =
-  let str = show t in
-  match String.split ~on:' ' str with
-  | [opcode] -> String.uppercase opcode
-  | [opcode; value] ->
-    let opcode = String.uppercase (String.drop_prefix opcode 1) in
-    let value = String.strip ~drop:((=) '"') (String.drop_suffix value 1) in
-    let sep = if split_instructions then "\n" else " " in
-    opcode ^ sep ^ value
-  | _ -> str
+let size opcode = match opcode with
+  | Push (n, _) -> n + 1
+  | _ -> 1
+
+let to_string t = match t with
+  | Push (n, value) ->
+    Printf.sprintf "PUSH%d %s" n value
+  | Dup n -> Printf.sprintf "DUP%d" n
+  | Swap n -> Printf.sprintf "SWAP%d" n
+  | _ -> String.uppercase (show t)

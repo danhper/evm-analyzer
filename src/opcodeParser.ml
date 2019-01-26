@@ -91,72 +91,13 @@ let consume_full_opcode t =
   | 0x5a -> Gas
   | 0x5b -> Jumpdest
 
-  | 0x60 -> Push1 (consume t ~bytes:1)
-  | 0x61 -> Push2 (consume t ~bytes:2)
-  | 0x62 -> Push3 (consume t ~bytes:3)
-  | 0x63 -> Push4 (consume t ~bytes:4)
-  | 0x64 -> Push5 (consume t ~bytes:5)
-  | 0x65 -> Push6 (consume t ~bytes:6)
-  | 0x66 -> Push7 (consume t ~bytes:7)
-  | 0x67 -> Push8 (consume t ~bytes:8)
-  | 0x68 -> Push9 (consume t ~bytes:9)
-  | 0x69 -> Push10 (consume t ~bytes:10)
-  | 0x6a -> Push11 (consume t ~bytes:11)
-  | 0x6b -> Push12 (consume t ~bytes:12)
-  | 0x6c -> Push13 (consume t ~bytes:13)
-  | 0x6d -> Push14 (consume t ~bytes:14)
-  | 0x6e -> Push15 (consume t ~bytes:15)
-  | 0x6f -> Push16 (consume t ~bytes:16)
-  | 0x70 -> Push17 (consume t ~bytes:17)
-  | 0x71 -> Push18 (consume t ~bytes:18)
-  | 0x72 -> Push19 (consume t ~bytes:19)
-  | 0x73 -> Push20 (consume t ~bytes:20)
-  | 0x74 -> Push21 (consume t ~bytes:21)
-  | 0x75 -> Push22 (consume t ~bytes:22)
-  | 0x76 -> Push23 (consume t ~bytes:23)
-  | 0x77 -> Push24 (consume t ~bytes:24)
-  | 0x78 -> Push25 (consume t ~bytes:25)
-  | 0x79 -> Push26 (consume t ~bytes:26)
-  | 0x7a -> Push27 (consume t ~bytes:27)
-  | 0x7b -> Push28 (consume t ~bytes:28)
-  | 0x7c -> Push29 (consume t ~bytes:29)
-  | 0x7d -> Push30 (consume t ~bytes:30)
-  | 0x7e -> Push31 (consume t ~bytes:31)
-  | 0x7f -> Push32 (consume t ~bytes:32)
+  | n when n >= 0x60 && n <= 0x7f ->
+    let bytes = (n - 0x60 + 1) in
+    Push (bytes, (consume t ~bytes))
 
-  | 0x80 -> Dup1
-  | 0x81 -> Dup2
-  | 0x82 -> Dup3
-  | 0x83 -> Dup4
-  | 0x84 -> Dup5
-  | 0x85 -> Dup6
-  | 0x86 -> Dup7
-  | 0x87 -> Dup8
-  | 0x88 -> Dup9
-  | 0x89 -> Dup10
-  | 0x8a -> Dup11
-  | 0x8b -> Dup12
-  | 0x8c -> Dup13
-  | 0x8d -> Dup14
-  | 0x8e -> Dup15
-  | 0x8f -> Dup16
+  | n when n >= 0x80 && n <= 0x8f -> Dup (n - 0x80 + 1)
 
-  | 0x90 -> Swap1
-  | 0x91 -> Swap2
-  | 0x92 -> Swap3
-  | 0x93 -> Swap4
-  | 0x94 -> Swap5
-  | 0x95 -> Swap6
-  | 0x96 -> Swap7
-  | 0x97 -> Swap8
-  | 0x98 -> Swap9
-  | 0x99 -> Swap10
-  | 0x9a -> Swap11
-  | 0x9b -> Swap12
-  | 0x9c -> Swap13
-  | 0x9d -> Swap14
-  | 0x9e -> Swap15
-  | 0x9f -> Swap16
+  | n when n >= 0x90 && n <= 0x9f -> Swap (n - 0x90 + 1)
 
   | 0xa0 -> Log0
   | 0xa1 -> Log1

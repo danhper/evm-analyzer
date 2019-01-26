@@ -6,10 +6,10 @@ let opcodes_command =
   ~summary:"Retrieve opcodes from EVM bytecode"
   [%map_open
     let input_file = anon ("input-file" %: string)
-    and split_instructions = flag "split-instructions" no_arg ~doc:"split instructions in two lines"
+    and show_pc = flag "show-pc" no_arg ~doc:"show program counter"
     and output = flag "output" (optional string) ~doc:"ouptut file" in
     fun () ->
-      Commands.opcodes_command ?output ~split_instructions input_file
+      Commands.opcodes_command ?output ~show_pc input_file
   ]
 
 let evm_analyzer_command =
