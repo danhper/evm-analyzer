@@ -7,9 +7,10 @@ let opcodes_command =
   [%map_open
     let input_file = anon ("input-file" %: string)
     and show_pc = flag "show-pc" no_arg ~doc:"show program counter"
+    and show_sourcemap = flag "show-sourcemap" no_arg ~doc:"show sourcemap"
     and output = flag "output" (optional string) ~doc:"ouptut file" in
     fun () ->
-      Commands.opcodes_command ?output ~show_pc input_file
+      Commands.opcodes_command ?output ~show_pc ~show_sourcemap input_file
   ]
 
 let evm_analyzer_command =

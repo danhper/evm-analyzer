@@ -6,8 +6,10 @@ module Contract: sig
     bytecode: String.t;
     opcodes: Opcode.t List.t;
     source: String.t Option.t;
-    sourcemap: String.t Option.t;
+    sourcemap: Sourcemap.t Option.t;
   }
+
+  val format_opcodes: ?show_pc:bool -> ?show_sourcemap:bool -> t -> String.t
 end
 
 type t = {
@@ -15,7 +17,7 @@ type t = {
   filename: String.t Option.t;
 }
 
-val format_opcodes: ?contract:String.t Option.t -> ?show_pc:bool -> t -> String.t
+val format_opcodes: ?contract:String.t Option.t -> ?show_pc:bool -> ?show_sourcemap:bool -> t -> String.t
 
 val of_json: ?filename:String.t Option.t -> String.t -> t
 val of_bytecode: ?filename:String.t Option.t -> String.t -> t
