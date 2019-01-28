@@ -5,7 +5,7 @@ module Contract: sig
     name: String.t;
     bytecode: String.t;
     opcodes: Opcode.t List.t;
-    source: String.t Option.t;
+    sources: (String.t * String.t) List.t Option.t;
     sourcemap: Sourcemap.t Option.t;
   }
 

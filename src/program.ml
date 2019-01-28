@@ -5,7 +5,7 @@ module Contract = struct
     name: String.t;
     bytecode: String.t;
     opcodes: Opcode.t List.t;
-    source: String.t Option.t;
+    sources: (String.t * String.t) List.t Option.t;
     sourcemap: Sourcemap.t Option.t;
   }
 
@@ -25,23 +25,23 @@ module Contract = struct
     let sourcemap = (Option.value_exn ~message:"sourcemap not available" t.sourcemap) in
 
     let acc_range offset acc elem = if elem = '\n' then offset :: acc else acc in
-    let make_ranges source = Array.of_list_rev (String.foldi ~init:[0] ~f:acc_range source) in
-    let ranges = Option.map ~f:make_ranges t.source in
+    let make_ranges (_filename, source) = Array.of_list_rev (String.foldi ~init:[0] ~f:acc_range source) in
+    let source_ranges = Option.map ~f:(List.map ~f:make_ranges) t.sources in
 
     let format_mapping mapping =
       let open Sourcemap.Mapping in
-      match mapping.source_index with
-      | -1 -> "NA"
-      | 1 ->
+      let idx = mapping.source_index - 1 in
+      if idx < 0 then "NA" else
         let stop = mapping.start + mapping.length in
-        begin match ranges with
+        match source_ranges with
         | None -> Printf.sprintf "%d-%d" mapping.start stop
-        | Some ranges ->
+        | Some r when idx >= List.length r -> "NA"
+        | Some all_ranges ->
+          let prefix = if idx = 0 then "" else fst (List.nth_exn (Option.value_exn t.sources) idx) in
+          let ranges = List.nth_exn all_ranges idx in
           let (start_line, start_col) = get_position mapping.start ranges in
           let (stop_line, stop_col) = get_position stop ranges in
-          Printf.sprintf "%d:%d-%d:%d" start_line start_col stop_line stop_col
-        end
-      | n -> Int.to_string n
+          Printf.sprintf "%s%d:%d-%d:%d" prefix start_line start_col stop_line stop_col
     in
     List.map ~f:format_mapping sourcemap
 
@@ -83,15 +83,20 @@ let of_json ?(filename=None) json_string =
   let open Yojson.Safe.Util in
   let json = json_string |> Yojson.Safe.from_string in
   let contracts_json = member "contracts" json in
-  let get_source ~idx filename =
-    let relative_path = json |> member "sourceList" |> index idx |> to_string in
+  let get_sources contract_json filename =
+    let raw_metadata = contract_json |> member "metadata" |> to_string_option in
+    let metadata = Option.value_exn ~message:"metadata not available" raw_metadata in
+    let relative_paths = metadata |> Yojson.Safe.from_string |> member "sources" |> keys in
     let directory = Filename.dirname filename in
-    let source_path = Filename.concat directory relative_path in
-    match Sys.file_exists source_path with
-    | `Yes -> Some (In_channel.read_all source_path)
-    | `Unknown | `No -> None
+    let f relative_path =
+      let source_path = Filename.concat directory relative_path in
+      match Sys.file_exists source_path with
+      | `Yes -> Some (relative_path, (In_channel.read_all source_path))
+      | `Unknown | `No -> None
+    in
+    Option.all (List.map ~f relative_paths)
   in
-  let get_contract idx name =
+  let get_contract name =
     let open Contract in
     let contract_json = member name contracts_json in
     let bytecode = contract_json |> member "bin-runtime" |> to_string in
@@ -101,10 +106,10 @@ let of_json ?(filename=None) json_string =
       bytecode;
       opcodes = OpcodeParser.parse_bytecode bytecode;
       sourcemap;
-      source = Option.bind filename ~f:(get_source ~idx);
+      sources = Option.bind filename ~f:(get_sources contract_json);
     }
   in
-  { contracts = List.mapi ~f:get_contract (keys contracts_json); filename; }
+  { contracts = List.map ~f:get_contract (keys contracts_json); filename; }
 
 let of_bytecode ?(filename=None) bytecode =
   let open Contract in
@@ -114,7 +119,7 @@ let of_bytecode ?(filename=None) bytecode =
     name;
     bytecode;
     opcodes = OpcodeParser.parse_bytecode bytecode;
-    source = None;
+    sources = None;
     sourcemap = None;
   }]
   in
