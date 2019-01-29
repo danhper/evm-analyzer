@@ -12,7 +12,7 @@ module Mapping: sig
     length: Int.t;
     source_index: Int.t;
     jump: JumpType.t;
-  } [@@deriving fields]
+  }
 end
 
 type t = Mapping.t List.t

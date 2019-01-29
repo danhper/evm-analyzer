@@ -1,5 +1,6 @@
 (library
   (name evm_analyzer)
   (libraries core yojson zarith)
-  (preprocess (pps ppx_let ppx_deriving ppx_deriving.show ppx_fields_conv))
+  (preprocess
+    (staged_pps ppx_import ppx_let ppx_deriving ppx_deriving.show ppx_fields_conv))
   (public_name evm-analyzer))

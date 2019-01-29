@@ -1,7 +1,7 @@
 open Core
 
 module JumpType = struct
-  type t = In | Out | Regular
+  type t = [%import: Sourcemap.JumpType.t]
 
   let of_string string = match string with
     | "-" -> Regular
@@ -11,30 +11,24 @@ module JumpType = struct
 end
 
 module Mapping = struct
-  type t = {
-    start: Int.t;
-    length: Int.t;
-    source_index: Int.t;
-    jump: JumpType.t;
-  } [@@deriving fields]
+  type t = [%import: Sourcemap.Mapping.t]
 end
 
-type t = Mapping.t List.t
+type t = [%import: Sourcemap.t]
 
 let of_list mappings =
   let f acc elem =
     let open Mapping in
-    let open Mapping.Fields in
     let mapping = String.split ~on:':' elem in
     let get_value ~f ~accessor idx =
       match List.nth mapping idx with
       | None | Some "" -> acc |> List.hd_exn |> accessor
       | Some v -> f v
     in
-    { start = get_value ~f:Int.of_string ~accessor:(Field.get start) 0;
-      length = get_value ~f:Int.of_string ~accessor:(Field.get length) 1;
-      source_index = get_value ~f:Int.of_string ~accessor:(Field.get source_index) 2;
-      jump = get_value ~f:JumpType.of_string ~accessor:(Field.get jump) 3;
+    { start = get_value ~f:Int.of_string ~accessor:(fun v -> v.start) 0;
+      length = get_value ~f:Int.of_string ~accessor:(fun v -> v.length) 1;
+      source_index = get_value ~f:Int.of_string ~accessor:(fun v -> v.source_index) 2;
+      jump = get_value ~f:JumpType.of_string ~accessor:(fun v -> v.jump) 3;
     } :: acc
   in
   mappings |> List.fold ~init:[] ~f |> List.rev
