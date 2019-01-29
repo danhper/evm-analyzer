@@ -1,6 +1,11 @@
 open Core
 
 
+module BigInt = struct
+  type t = Z.t
+  let pp f x = Format.pp_print_string f (Z.format "#0x%x" x)
+end
+
 type t =
   | Stop       (* halts execution *)
   | Add        (* addition operation *)
@@ -69,7 +74,7 @@ type t =
   | Gas          (* get the amount of available gas *)
   | Jumpdest     (* set a potential jump destination *)
 
-  | Push of Int.t * String.t (* plance n bytes item on the stacks *)
+  | Push of Int.t * BigInt.t (* plance n bytes item on the stacks *)
 
   | Dup of Int.t   (* copies the nth highest item in the stack to the top of the stack *)
 
@@ -205,7 +210,7 @@ let of_string string =
       let value = if String.is_prefix ~prefix:"0x" raw_value
         then String.drop_prefix raw_value 2 else raw_value in
       let len = get_length ~opcode:"PUSH" push in
-      let final_value = "0x" ^ (String.sub value ~pos:0 ~len) in
+      let final_value = Z.of_string_base 16 (String.sub value ~pos:0 ~len:(len * 2)) in
       Push (len, final_value)
     | _ -> failwithf "invalid push format: %s" v ()
     end
@@ -221,7 +226,15 @@ let size op = match op with
 
 let to_string t = match t with
   | Push (n, value) ->
-    Printf.sprintf "PUSH%d %s" n value
+    Printf.sprintf "PUSH%d %s" n (Z.format "#0x%x" value)
   | Dup n -> Printf.sprintf "DUP%d" n
   | Swap n -> Printf.sprintf "SWAP%d" n
   | _ -> String.uppercase (show t)
+
+let has_result t = match t with
+  | Dup _ | Swap _
+  | Calldatacopy | Codecopy | Extcodecopy | Returndatacopy
+  | Pop | Mstore | Mstore8 | Sstore
+  | Jump | Jumpi | Jumpif | Jumpto | Jumpsub | Jumpsubv | Jumpdest
+  | Log0 | Log1 | Log2 | Log3 | Log4 | Return | Revert | Selfdestruct -> false
+  | _ -> true

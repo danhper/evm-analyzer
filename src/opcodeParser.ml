@@ -12,13 +12,13 @@ let consume t ~bytes =
   let len = bytes * 2 in
   if t.index + len > length t then
     let left_bytecode = String.sub t.bytecode ~pos:t.index ~len:(length t - t.index) in
-    failwith (Printf.sprintf "cound not get %d bytes from %s" len left_bytecode)
+    failwith (Printf.sprintf "could not get %d bytes from %s" len left_bytecode)
   else
     let bytecode = String.sub t.bytecode ~pos:t.index ~len in
     t.index <- t.index + len;
-    "0x" ^ bytecode
+    Z.of_string_base 16 bytecode
 
-let consume_opcode t = Int.Hex.of_string (consume ~bytes:1 t)
+let consume_opcode t = Z.to_int (consume ~bytes:1 t)
 
 let consume_full_opcode t =
   let open Op in
@@ -93,7 +93,7 @@ let consume_full_opcode t =
 
   | n when n >= 0x60 && n <= 0x7f ->
     let bytes = (n - 0x60 + 1) in
-    Push (bytes, (consume t ~bytes))
+    Push (bytes, consume t ~bytes)
 
   | n when n >= 0x80 && n <= 0x8f -> Dup (n - 0x80 + 1)
 
