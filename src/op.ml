@@ -86,17 +86,6 @@ type t =
   | Log3        (* Makes a log entry; 3 topics. *)
   | Log4        (* Makes a log entry; 4 topics. *)
 
-  | Jumpto             (* alter the program counter to a jumpdest -- not part of Instructions.cpp *)
-  | Jumpif             (* conditionally alter the program counter -- not part of Instructions.cpp *)
-  | Jumpv              (* alter the program counter to a jumpdest -- not part of Instructions.cpp *)
-  | Jumpsub            (* alter the program counter to a beginsub -- not part of Instructions.cpp *)
-  | Jumpsubv           (* alter the program counter to a beginsub -- not part of Instructions.cpp *)
-  | Beginsub           (* set a potential jumpsub destination -- not part of Instructions.cpp *)
-  | Begindata          (* begin the data section -- not part of Instructions.cpp *)
-  | Returnsub          (* return to subroutine jumped from -- not part of Instructions.cpp *)
-  | Putlocal           (* pop top of stack to local variable -- not part of Instructions.cpp *)
-  | Getlocal           (* push local variable to top of stack -- not part of Instructions.cpp *)
-
   | Create        (* create a new account with associated code *)
   | Call          (* message-call into an account *)
   | Callcode      (* message-call with another account's code only *)
@@ -184,16 +173,6 @@ let of_string string =
   | "LOG2" -> Log2
   | "LOG3" -> Log3
   | "LOG4" -> Log4
-  | "JUMPTO" -> Jumpto
-  | "JUMPIF" -> Jumpif
-  | "JUMPV" -> Jumpv
-  | "JUMPSUB " -> Jumpsub
-  | "JUMPSUBV" -> Jumpsubv
-  | "BEGINSUB" -> Beginsub
-  | "BEGINDATA" -> Begindata
-  | "RETURNSUB" -> Returnsub
-  | "PUTLOCAL" -> Putlocal
-  | "GETLOCAL" -> Getlocal
   | "CREATE" -> Create
   | "CALL" -> Call
   | "CALLCODE" -> Callcode
@@ -235,6 +214,6 @@ let has_result t = match t with
   | Dup _ | Swap _
   | Calldatacopy | Codecopy | Extcodecopy | Returndatacopy
   | Pop | Mstore | Mstore8 | Sstore
-  | Jump | Jumpi | Jumpif | Jumpto | Jumpsub | Jumpsubv | Jumpdest
+  | Jump | Jumpi | Jumpdest
   | Log0 | Log1 | Log2 | Log3 | Log4 | Return | Revert | Selfdestruct -> false
   | _ -> true

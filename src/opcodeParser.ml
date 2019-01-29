@@ -105,17 +105,6 @@ let consume_full_opcode t =
   | 0xa3 -> Log3
   | 0xa4 -> Log4
 
-  | 0xb0 -> Jumpto
-  | 0xb1 -> Jumpif
-  | 0xb2 -> Jumpv
-  | 0xb3 -> Jumpsub
-  | 0xb4 -> Jumpsubv
-  | 0xb5 -> Beginsub
-  | 0xb6 -> Begindata
-  | 0xb7 -> Returnsub
-  | 0xb8 -> Putlocal
-  | 0xb9 -> Getlocal
-
   | 0xf0 -> Create
   | 0xf1 -> Call
   | 0xf2 -> Callcode
