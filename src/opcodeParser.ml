@@ -16,9 +16,9 @@ let consume t ~bytes =
   else
     let bytecode = String.sub t.bytecode ~pos:t.index ~len in
     t.index <- t.index + len;
-    Z.of_string_base 16 bytecode
+    BigInt.of_string_base 16 bytecode
 
-let consume_opcode t = Z.to_int (consume ~bytes:1 t)
+let consume_opcode t = BigInt.to_int (consume ~bytes:1 t)
 
 let consume_full_opcode t =
   let open Op in

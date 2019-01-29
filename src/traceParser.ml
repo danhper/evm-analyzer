@@ -33,7 +33,7 @@ let parse_json struct_logs =
     let op = Op.of_string full_op in
     let result = match op with
     | Push (_, res) -> Some res
-    | op when Op.has_result op -> Some (Z.of_string_base 16 (get_result traces))
+    | op when Op.has_result op -> Some (BigInt.of_string_base 16 (get_result rest))
     | _ -> None
     in
     parse rest (make_trace op result trace :: acc)

@@ -1,11 +1,5 @@
 open Core
 
-
-module BigInt = struct
-  type t = Z.t
-  let pp f x = Format.pp_print_string f (Z.format "#0x%x" x)
-end
-
 type t =
   | Stop       (* halts execution *)
   | Add        (* addition operation *)
@@ -189,7 +183,8 @@ let of_string string =
       let value = if String.is_prefix ~prefix:"0x" raw_value
         then String.drop_prefix raw_value 2 else raw_value in
       let len = get_length ~opcode:"PUSH" push in
-      let final_value = Z.of_string_base 16 (String.sub value ~pos:0 ~len:(len * 2)) in
+      let pos = 64 - (len * 2) in
+      let final_value = BigInt.of_string_base 16 (String.sub value ~pos ~len:(len * 2)) in
       Push (len, final_value)
     | _ -> failwithf "invalid push format: %s" v ()
     end
@@ -205,10 +200,32 @@ let size op = match op with
 
 let to_string t = match t with
   | Push (n, value) ->
-    Printf.sprintf "PUSH%d %s" n (Z.format "#0x%x" value)
+    Printf.sprintf "PUSH%d %s" n (BigInt.format "#0x%x" value)
   | Dup n -> Printf.sprintf "DUP%d" n
   | Swap n -> Printf.sprintf "SWAP%d" n
   | _ -> String.uppercase (show t)
+
+
+let input_count t = match t with
+  | Stop | Address | Origin | Caller | Callvalue | Calldatasize | Codesize | Gasprice
+  | Returndatasize | Coinbase | Timestamp | Number | Difficulty | Gaslimit
+  | Pc | Msize | Gas | Jumpdest | Push _ | Dup _ | Swap _ | Invalid | Unknown _ -> 0
+
+  | Iszero | Not | Balance | Calldataload | Extcodesize | Blockhash
+  | Pop | Mload | Sload | Jump | Selfdestruct | Extcodehash -> 1
+
+  | Add | Mul | Sub | Div | Sdiv | Mod | Smod | Exp | Signextend
+  | Lt | Gt | Slt | Sgt | Eq | And | Or | Xor | Byte | Shl | Shr | Sar
+  | Keccak256 | Mstore | Mstore8 | Sstore | Jumpi | Log0
+  | Return | Revert -> 2
+
+  | Addmod | Mulmod | Calldatacopy | Returndatacopy | Codecopy | Log1 | Create -> 3
+
+  | Extcodecopy | Log2 | Create2 -> 4
+  | Log3 -> 5
+  | Log4 | Delegatecall | Staticcall-> 6
+  | Call | Callcode -> 7
+
 
 let has_result t = match t with
   | Dup _ | Swap _

@@ -9,7 +9,7 @@ type 'a t = {
   mutable head: 'a node Option.t;
 }
 
-let empty () = { head = None }
+let create () = { head = None }
 let pop t = match t.head with
 | None -> failwith "empty stack"
 | Some n -> t.head <- n.next; n.value
@@ -54,3 +54,7 @@ let swap t n =
 let dup t n =
   let node = nth_node t n in
   push t node.value
+
+let to_string ~f t =
+  let elems = List.rev_map ~f (fold ~init:[] ~f:(Fn.flip List.cons) t) in
+  "(" ^ String.concat ~sep:" " elems ^ ")"

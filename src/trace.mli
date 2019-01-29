@@ -6,5 +6,5 @@ type t = {
   op: Op.t;
   depth: Int.t;
   pc: Int.t;
-  result: Z.t Option.t;
+  result: BigInt.t Option.t;
 }
