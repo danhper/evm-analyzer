@@ -107,7 +107,115 @@ type t =
   | Unknown of String.t      (* unknown opcodes *)
   [@@deriving show { with_path = false }]
 
-let size opcode = match opcode with
+let of_string string =
+  let get_length ~opcode string =
+    let length = String.drop_prefix string (String.length opcode) in
+    Int.of_string length
+  in
+  match string with
+  | "STOP" -> Stop
+  | "ADD" -> Add
+  | "MUL" -> Mul
+  | "SUB" -> Sub
+  | "DIV" -> Div
+  | "SDIV" -> Sdiv
+  | "MOD" -> Mod
+  | "SMOD" -> Smod
+  | "ADDMOD" -> Addmod
+  | "MULMOD" -> Mulmod
+  | "EXP" -> Exp
+  | "SIGNEXTEND" -> Signextend
+  | "LT" -> Lt
+  | "GT" -> Gt
+  | "SLT" -> Slt
+  | "SGT" -> Sgt
+  | "EQ" -> Eq
+  | "ISZERO" -> Iszero
+  | "AND" -> And
+  | "OR" -> Or
+  | "XOR" -> Xor
+  | "NOT" -> Not
+  | "BYTE" -> Byte
+  | "SHL" -> Shl
+  | "SHR" -> Shr
+  | "SAR" -> Sar
+  | "KECCAK256" -> Keccak256
+  | "ADDRESS" -> Address
+  | "BALANCE" -> Balance
+  | "ORIGIN" -> Origin
+  | "CALLER" -> Caller
+  | "CALLVALUE" -> Callvalue
+  | "CALLDATALOAD" -> Calldataload
+  | "CALLDATASIZE" -> Calldatasize
+  | "CALLDATACOPY" -> Calldatacopy
+  | "CODESIZE" -> Codesize
+  | "CODECOPY" -> Codecopy
+  | "GASPRICE" -> Gasprice
+  | "EXTCODESIZE" -> Extcodesize
+  | "EXTCODECOPY" -> Extcodecopy
+  | "RETURNDATASIZE" -> Returndatasize
+  | "RETURNDATACOPY" -> Returndatacopy
+  | "EXTCODEHASH" -> Extcodehash
+  | "BLOCKHASH" -> Blockhash
+  | "COINBASE" -> Coinbase
+  | "TIMESTAMP" -> Timestamp
+  | "NUMBER" -> Number
+  | "DIFFICULTY" -> Difficulty
+  | "GASLIMIT" -> Gaslimit
+  | "POP" -> Pop
+  | "MLOAD" -> Mload
+  | "MSTORE" -> Mstore
+  | "MSTORE8" -> Mstore8
+  | "SLOAD" -> Sload
+  | "SSTORE" -> Sstore
+  | "JUMP" -> Jump
+  | "JUMPI" -> Jumpi
+  | "PC" -> Pc
+  | "MSIZE" -> Msize
+  | "GAS" -> Gas
+  | "JUMPDEST" -> Jumpdest
+  | "LOG0" -> Log0
+  | "LOG1" -> Log1
+  | "LOG2" -> Log2
+  | "LOG3" -> Log3
+  | "LOG4" -> Log4
+  | "JUMPTO" -> Jumpto
+  | "JUMPIF" -> Jumpif
+  | "JUMPV" -> Jumpv
+  | "JUMPSUB " -> Jumpsub
+  | "JUMPSUBV" -> Jumpsubv
+  | "BEGINSUB" -> Beginsub
+  | "BEGINDATA" -> Begindata
+  | "RETURNSUB" -> Returnsub
+  | "PUTLOCAL" -> Putlocal
+  | "GETLOCAL" -> Getlocal
+  | "CREATE" -> Create
+  | "CALL" -> Call
+  | "CALLCODE" -> Callcode
+  | "RETURN" -> Return
+  | "DELEGATECALL" -> Delegatecall
+  | "CREATE2" -> Create2
+  | "STATICCALL" -> Staticcall
+  | "REVERT" -> Revert
+  | "INVALID" -> Invalid
+  | "SELFDESTRUCT" -> Selfdestruct
+  | v when String.is_prefix ~prefix:"PUSH" v ->
+    begin match String.split ~on:' ' v with
+    | [push; raw_value] ->
+      let value = if String.is_prefix ~prefix:"0x" raw_value
+        then String.drop_prefix raw_value 2 else raw_value in
+      let len = get_length ~opcode:"PUSH" push in
+      let final_value = "0x" ^ (String.sub value ~pos:0 ~len) in
+      Push (len, final_value)
+    | _ -> failwithf "invalid push format: %s" v ()
+    end
+  | v when String.is_prefix ~prefix:"DUP" v ->
+    Dup (get_length ~opcode:"DUP" v)
+  | v when String.is_prefix ~prefix:"SWAP" v ->
+    Swap (get_length ~opcode:"SWAP" v)
+  | v -> Unknown v
+
+let size op = match op with
   | Push (n, _) -> n + 1
   | _ -> 1
 

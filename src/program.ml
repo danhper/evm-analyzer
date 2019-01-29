@@ -4,7 +4,7 @@ module Contract = struct
   type t = {
     name: String.t;
     bytecode: String.t;
-    opcodes: Opcode.t List.t;
+    ops: Op.t List.t;
     sources: (String.t * String.t) List.t Option.t;
     sourcemap: Sourcemap.t Option.t;
   }
@@ -45,19 +45,19 @@ module Contract = struct
     in
     List.map ~f:format_mapping sourcemap
 
-  let append_sourcemaps t opcodes =
+  let append_sourcemaps t ops =
     let formatted_sourcemap = format_sourcemap t in
-    let length_diff = List.length opcodes - List.length formatted_sourcemap in
+    let length_diff = List.length ops - List.length formatted_sourcemap in
     let final_sourcemap = formatted_sourcemap @ List.init length_diff ~f:(Fn.const "NA") in
     let f (opcode, mapping) = opcode ^ " " ^ mapping in
-    List.map ~f (List.zip_exn opcodes final_sourcemap)
+    List.map ~f (List.zip_exn ops final_sourcemap)
 
-  let format_opcodes ?(show_pc=false) ?(show_sourcemap=false) t =
-    let f (result, pc) opcode =
+  let format_ops ?(show_pc=false) ?(show_sourcemap=false) t =
+    let f (result, pc) op =
       let pc_string = if show_pc then Printf.sprintf "%d " pc else "" in
-      ((pc_string ^ Opcode.to_string opcode) :: result, pc + Opcode.size opcode)
+      ((pc_string ^ Op.to_string op) :: result, pc + Op.size op)
     in
-    let string_opcodes = List.fold ~init:([], 1) ~f t.opcodes |> fst |> List.rev in
+    let string_opcodes = List.fold ~init:([], 1) ~f t.ops |> fst |> List.rev in
     let formatted_opcodes =
       if show_sourcemap
         then append_sourcemaps t string_opcodes
@@ -71,12 +71,12 @@ type t = {
   filename: String.t Option.t;
 }
 
-let format_opcodes ?contract:(contract_name=None) ?(show_pc=false) ?(show_sourcemap=false) t =
+let format_ops ?contract:(contract_name=None) ?(show_pc=false) ?(show_sourcemap=false) t =
   let contract = match contract_name with
   | None -> List.hd_exn t.contracts
   | Some name -> List.find_exn ~f:(fun v -> v.Contract.name = name) t.contracts
   in
-  Contract.format_opcodes ~show_pc ~show_sourcemap contract
+  Contract.format_ops ~show_pc ~show_sourcemap contract
 
 
 let of_json ?(filename=None) json_string =
@@ -104,7 +104,7 @@ let of_json ?(filename=None) json_string =
                     |> Option.map ~f:Sourcemap.of_string in
     { name;
       bytecode;
-      opcodes = OpcodeParser.parse_bytecode bytecode;
+      ops = OpcodeParser.parse_bytecode bytecode;
       sourcemap;
       sources = Option.bind filename ~f:(get_sources contract_json);
     }
@@ -118,7 +118,7 @@ let of_bytecode ?(filename=None) bytecode =
   let contracts = [{
     name;
     bytecode;
-    opcodes = OpcodeParser.parse_bytecode bytecode;
+    ops = OpcodeParser.parse_bytecode bytecode;
     sources = None;
     sourcemap = None;
   }]

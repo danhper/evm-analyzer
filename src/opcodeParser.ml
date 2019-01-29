@@ -21,7 +21,7 @@ let consume t ~bytes =
 let consume_opcode t = Int.Hex.of_string (consume ~bytes:1 t)
 
 let consume_full_opcode t =
-  let open Opcode in
+  let open Op in
   let opcode = consume_opcode t in
   match opcode with
   | 0x00 -> Stop
