@@ -25,7 +25,7 @@ let execute_traces ?debug:(debug=false) t traces =
     | Op.Swap n -> EStack.swap env.Env.stack (n - 1)
     | _ -> ();
     let args_count = Op.input_count trace.op in
-    let args = List.init args_count ~f:(fun _ -> EStack.pop env.Env.stack) in
+    let args = List.rev (List.init args_count ~f:(fun _ -> EStack.pop env.Env.stack)) in
     let result = Option.map ~f:(StackValue.create ~id:trace.Trace.index) trace.result in
     let full_trace = FullTrace.({ result; args; trace; }) in
     List.iter ~f:(fun t -> t db full_trace) t.taggers;
