@@ -19,9 +19,10 @@ let analyze_traces_command =
   ~summary:"Analyze transaction traces"
   [%map_open
     let input_file = anon ("input-file" %: string)
+    and query = anon ("query" %: string)
     and debug = flag "debug" no_arg ~doc:"debug mode" in
     fun () ->
-      ignore(Commands.analyze_traces ~debug input_file)
+      Commands.analyze_traces ~debug input_file query
   ]
 
 
