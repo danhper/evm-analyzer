@@ -33,7 +33,7 @@ let parse_json struct_logs =
     Op.of_string full_op
   in
 
-  let index = ref 0 in
+  let index = ref ~-1 in
   let rec make_call trace rest =
     let depth = trace |> member "depth" |> to_int in
     let condition = fun t -> t |> member "depth" |> to_int = depth + 1 in
