@@ -228,9 +228,13 @@ let input_count t = match t with
 
 
 let has_result t = match t with
-  | Dup _ | Swap _
+  | Dup _ | Swap _ | Stop
   | Calldatacopy | Codecopy | Extcodecopy | Returndatacopy
   | Pop | Mstore | Mstore8 | Sstore
   | Jump | Jumpi | Jumpdest
   | Log0 | Log1 | Log2 | Log3 | Log4 | Return | Revert | Selfdestruct -> false
   | _ -> true
+
+let has_children t = match t with
+  | Call | Staticcall -> true
+  | _ -> false

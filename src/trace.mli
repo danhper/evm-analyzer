@@ -7,4 +7,5 @@ type t = {
   depth: Int.t;
   pc: Int.t;
   result: BigInt.t Option.t;
+  children: t List.t;
 }

@@ -1,15 +1,6 @@
 open Core
 open TracerTypes
 
-module Env = struct
-  type t = {
-    stack: StackValue.t EStack.t;
-  }
-
-  let create () = { stack = EStack.create () }
-end
-
-
 type t = {
   taggers: (FullTrace.t -> unit) List.t;
 }
@@ -23,7 +14,7 @@ let execute_traces ?(debug=false) t traces =
     if debug then
       let stack_str = EStack.to_string ~f:StackValue.show env.Env.stack in
       let op_code_str = Op.to_string trace.op in
-      Out_channel.printf "%s %s\n" op_code_str stack_str;
+      Out_channel.printf "%d: %s %s\n" trace.pc op_code_str stack_str;
     match trace.op with
     | Op.Dup n -> EStack.dup env.Env.stack (n - 1)
     | Op.Swap n -> EStack.swap env.Env.stack (n - 1)

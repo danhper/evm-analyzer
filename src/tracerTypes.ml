@@ -19,6 +19,10 @@ module StackValue = struct
   let set_tag t ~key ~value = Hashtbl.set t.tags ~key ~data:value
   let get_tag t key = Hashtbl.find t.tags key
   let get_tag_exn t key = Hashtbl.find_exn t.tags key
+  let has_tag t ?value key = match get_tag t key, value with
+    | None, _ -> false
+    | Some _, None -> true
+    | Some v, Some o -> v = o
 end
 
 module FullTrace = struct
@@ -27,4 +31,10 @@ end
 
 module Tagger = struct
   type t = [%import: TracerTypes.Tagger.t]
+end
+
+module Env = struct
+  type t = [%import: TracerTypes.Env.t]
+
+  let create () = { stack = EStack.create () }
 end
