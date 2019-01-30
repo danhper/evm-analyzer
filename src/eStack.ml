@@ -7,9 +7,10 @@ type 'a node = {
 
 type 'a t = {
   mutable head: 'a node Option.t;
+  copy: ('a -> 'a);
 }
 
-let create () = { head = None }
+let create ?copy () = { head = None; copy = Option.value ~default:Fn.id copy; }
 let pop t = match t.head with
 | None -> failwith "empty stack"
 | Some n -> t.head <- n.next; n.value
@@ -53,7 +54,7 @@ let swap t n =
 
 let dup t n =
   let node = nth_node t n in
-  push t node.value
+  push t (t.copy node.value)
 
 let to_string ~f t =
   let elems = List.rev_map ~f (fold ~init:[] ~f:(Fn.flip List.cons) t) in

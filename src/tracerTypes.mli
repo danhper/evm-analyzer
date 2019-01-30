@@ -4,6 +4,7 @@ module Tags: sig
   type t = Yojson.Safe.json String.Table.t
   val to_string: t -> String.t
   val pp: Format.formatter -> Yojson.Safe.json String.Table.t -> unit
+  val copy: t -> t
 end
 
 module StackValue: sig
@@ -14,6 +15,7 @@ module StackValue: sig
 
   val create: BigInt.t -> t
 
+  val copy: t -> t
   val set_tag: t -> key:String.t -> value:Yojson.Safe.json -> unit
   val get_tag: t -> String.t -> Yojson.Safe.json Option.t
   val has_tag: t -> ?value:Yojson.Safe.json -> String.t -> bool
