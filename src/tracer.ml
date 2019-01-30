@@ -21,7 +21,7 @@ let execute_traces ?(debug=false) t traces =
     | _ -> ();
     let args_count = Op.input_count trace.op in
     let args = List.init args_count ~f:(fun _ -> EStack.pop env.Env.stack) in
-    let result = Option.map ~f:(fun r -> StackValue.create r) trace.result in
+    let result = Option.map ~f:StackValue.create trace.result in
     let full_trace = FullTrace.({ result; args; trace; }) in
     List.iter ~f:(fun t -> t full_trace) t.taggers;
     Option.iter result ~f:(EStack.push env.Env.stack)

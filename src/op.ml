@@ -236,5 +236,5 @@ let has_result t = match t with
   | _ -> true
 
 let has_children t = match t with
-  | Call | Staticcall -> true
+  | Call | Staticcall | Delegatecall -> true
   | _ -> false
