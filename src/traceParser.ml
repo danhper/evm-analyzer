@@ -3,10 +3,11 @@ open Core
 let parse_json struct_logs =
   let open Yojson.Safe.Util in
 
-  let make_trace ~op ~result ~children trace =
+  let make_trace ~op ~result ~index ~children trace =
     let open Trace in
     { gas = trace |> member "gas" |> to_int;
       gas_cost = trace |> member "gasCost" |> to_int;
+      index;
       op;
       depth = trace |> member "depth" |> to_int;
       pc = trace |> member "pc" |> to_int;
@@ -32,6 +33,7 @@ let parse_json struct_logs =
     Op.of_string full_op
   in
 
+  let index = ref 0 in
   let rec make_call trace rest =
     let depth = trace |> member "depth" |> to_int in
     let condition = fun t -> t |> member "depth" |> to_int = depth + 1 in
@@ -40,6 +42,7 @@ let parse_json struct_logs =
   | [] -> (List.rev acc, [])
   | trace :: _ when not (condition trace) -> (List.rev acc, traces)
   | trace :: rest ->
+    index := !index + 1;
     let op = get_op trace rest in
     let (children, rest) = if Op.has_children op
                              then make_call trace rest
@@ -49,7 +52,7 @@ let parse_json struct_logs =
     | op when Op.has_result op -> Some (BigInt.of_string_base 16 (get_result rest))
     | _ -> None
     in
-    parse ~condition rest (make_trace ~op ~result ~children trace :: acc)
+    parse ~condition rest (make_trace ~op ~result ~index:(!index) ~children trace :: acc)
   in
 
   parse ~condition:(Fn.const true) (to_list struct_logs) [] |> fst

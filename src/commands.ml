@@ -16,5 +16,5 @@ let analyze_traces ~debug filepath =
   let json = Yojson.Safe.from_file filepath in
   let struct_logs = Yojson.Safe.Util.member "structLogs" json in
   let traces = TraceParser.parse_json struct_logs in
-  let tracer = Tracer.create [Taggers.tag_storage] in
+  let tracer = Tracer.create [Taggers.tag_output; Taggers.tag_storage] in
   Tracer.execute_traces ~debug tracer traces

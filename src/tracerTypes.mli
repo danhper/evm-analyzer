@@ -1,25 +1,14 @@
 open Core
 
-module Tags: sig
-  type t = Yojson.Safe.json String.Table.t
-  val to_string: t -> String.t
-  val pp: Format.formatter -> Yojson.Safe.json String.Table.t -> unit
-  val copy: t -> t
-end
-
 module StackValue: sig
   type t = {
     value: BigInt.t;
-    tags: Tags.t;
+    id: Int.t;
   } [@@deriving show]
 
-  val create: BigInt.t -> t
+  val create: id:Int.t -> BigInt.t -> t
 
   val copy: t -> t
-  val set_tag: t -> key:String.t -> value:Yojson.Safe.json -> unit
-  val get_tag: t -> String.t -> Yojson.Safe.json Option.t
-  val has_tag: t -> ?value:Yojson.Safe.json -> String.t -> bool
-  val get_tag_exn: t -> String.t -> Yojson.Safe.json
 end
 
 module FullTrace: sig
@@ -31,7 +20,7 @@ module FullTrace: sig
 end
 
 module Tagger: sig
-  type t = FullTrace.t -> unit
+  type t = Db.t -> FullTrace.t -> unit
 end
 
 module Env: sig

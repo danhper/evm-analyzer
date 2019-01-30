@@ -21,7 +21,7 @@ let analyze_traces_command =
     let input_file = anon ("input-file" %: string)
     and debug = flag "debug" no_arg ~doc:"debug mode" in
     fun () ->
-      Commands.analyze_traces ~debug input_file
+      ignore(Commands.analyze_traces ~debug input_file)
   ]
 
 
