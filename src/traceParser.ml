@@ -1,5 +1,6 @@
 open Core
 
+
 let parse_json struct_logs =
   let open Yojson.Safe.Util in
 
@@ -56,3 +57,9 @@ let parse_json struct_logs =
   in
 
   parse ~condition:(Fn.const true) (to_list struct_logs) [] |> fst
+
+
+let parse_file filepath =
+  let json = Yojson.Safe.from_file filepath in
+  let struct_logs = Yojson.Safe.Util.member "structLogs" json in
+  parse_json struct_logs

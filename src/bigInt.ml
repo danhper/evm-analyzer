@@ -1,6 +1,9 @@
+open Core
 include Z
 
 let pp f t = Format.pp_print_string f (Z.format "#0x%x" t)
+
+let two = of_int 2
 
 let is_power ~power n =
   let rec is_power' n power =
@@ -18,3 +21,24 @@ let log ~base n =
     else log' (n / base) base (acc + one)
   in
   to_int (log' n (of_int base) zero)
+
+let int_size n =
+  let lower bits = neg (pow two Int.(bits - 1)) in
+  let upper bits = (pow two Int.(bits - 1)) - one in
+  let in_range v bits = v >= lower bits && v <= upper bits in
+  List.find ~f:(in_range n) [8; 16; 32; 64; 128; 256; 512]
+  |> Option.value ~default:1024
+
+let uint_size n =
+  if n < zero then failwith "negative uint"
+  else
+    let in_range v bits = v <= (pow two bits) - one in
+    List.find ~f:(in_range n) [8; 16; 32; 64; 128; 256; 512]
+    |> Option.value ~default:1024
+
+let twos_complement n bits =
+  if n land (one lsl Int.(bits - 1)) = zero
+    then n
+    else n - (one lsl bits)
+
+let limit_bits n bits = n land ((one lsl bits) - one)

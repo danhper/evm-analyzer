@@ -238,3 +238,14 @@ let has_result t = match t with
 let has_children t = match t with
   | Call | Staticcall | Delegatecall -> true
   | _ -> false
+
+let execute_binary_op op a b =
+  let open BigInt in
+  match op with
+  | Add -> a + b
+  | Sub -> a - b
+  | Mul -> a * b
+  | Div -> a / b
+  | Sdiv -> a / b
+  | Exp -> pow a (to_int b)
+  | _ -> failwith "op not supported"
