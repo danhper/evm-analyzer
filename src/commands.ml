@@ -18,6 +18,6 @@ let analyze_traces ~debug filepath query =
   let traces = TraceParser.parse_json struct_logs in
   let tracer = Tracer.create Taggers.all in
   let db = Tracer.execute_traces ~debug tracer traces in
-  let trace_indexes = Db.query1 db query in
+  let trace_indexes = FactDb.query1 db query in
   let traces = List.map ~f:(Fn.flip Yojson.Safe.Util.index struct_logs) trace_indexes in
   List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces

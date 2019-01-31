@@ -2,7 +2,7 @@ open Core
 open TracerTypes
 
 type t = {
-  taggers: (Db.t -> FullTrace.t -> unit) List.t;
+  taggers: (FactDb.t -> FullTrace.t -> unit) List.t;
 }
 
 let create taggers = { taggers; }
@@ -16,7 +16,7 @@ let log ~debug ~env trace =
 
 let execute_traces ?debug:(debug=false) t traces =
   let env = Env.create () in
-  let db = Db.create () in
+  let db = FactDb.create () in
   let execute_trace trace =
     let open Trace in
     log ~debug ~env trace;

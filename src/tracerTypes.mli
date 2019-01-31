@@ -20,7 +20,7 @@ module FullTrace: sig
 end
 
 module Tagger: sig
-  type t = Db.t -> FullTrace.t -> unit
+  type t = FactDb.t -> FullTrace.t -> unit
 end
 
 module Env: sig
