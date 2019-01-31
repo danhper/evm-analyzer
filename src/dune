@@ -5,7 +5,8 @@
 
 (library
   (name evm_analyzer)
-  (libraries core yojson zarith datalog.caml_interface)
+  (libraries core yojson zarith datalog.caml_interface
+             caqti caqti-driver-postgresql caqti-lwt monads)
   (preprocess
     (staged_pps ppx_import ppx_let ppx_deriving ppx_deriving.show ppx_fields_conv))
   (public_name evm-analyzer))

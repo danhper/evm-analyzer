@@ -59,6 +59,11 @@ let parse_json struct_logs =
   parse ~condition:(Fn.const true) (to_list struct_logs) [] |> fst
 
 
+let parse_string string =
+  let json = Yojson.Safe.from_string string in
+  let struct_logs = Yojson.Safe.Util.member "structLogs" json in
+  parse_json struct_logs
+
 let parse_file filepath =
   let json = Yojson.Safe.from_file filepath in
   let struct_logs = Yojson.Safe.Util.member "structLogs" json in
