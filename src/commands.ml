@@ -21,3 +21,8 @@ let analyze_traces ~debug filepath query =
   let trace_indexes = FactDb.query1 db query in
   let traces = List.map ~f:(Fn.flip Yojson.Safe.Util.index struct_logs) trace_indexes in
   List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces
+
+
+let analyze_vulnerabilities ~output vulnerability =
+  let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output vulnerability in
+  PgMonad.full_run result

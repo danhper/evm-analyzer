@@ -12,7 +12,7 @@ let transactions_query =
   Caqti_request.collect
     Caqti_type.(tup3 string int int) Caqti_type.(tup2 string string)
     "SELECT hash, trace FROM transactions t
-    WHERE t.to = ?
+    WHERE t.to = ? AND trace IS NOT NULL
     LIMIT ?
     OFFSET ?"
 

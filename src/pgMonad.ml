@@ -1,3 +1,4 @@
+open Core
 open Monads.Std
 
 type 'a t = ('a, Caqti_error.t) result Lwt.t
@@ -19,3 +20,10 @@ include Monad.Result.Make(struct type t = Caqti_error.t end)(
     type 'a t = 'a Lwt.t
     include LwtMonad
   end)
+
+let format_error error = Caqti_error.show error
+
+let full_run t =
+  match Lwt_main.run t with
+  | Ok () -> ()
+  | Error err -> Out_channel.fprintf Out_channel.stderr "%s\n" (format_error err)

@@ -25,11 +25,23 @@ let analyze_traces_command =
       Commands.analyze_traces ~debug input_file query
   ]
 
+let analyze_vulnerabilities_command =
+  let open Command.Let_syntax in
+  Command.basic
+  ~summary:"Analyze vulnerabilities of different transactions"
+  [%map_open
+    let vulnerability = anon ("vulnerability" %: string)
+    and output = flag "output" (required string) ~doc:"path output" in
+    fun () ->
+      Commands.analyze_vulnerabilities ~output vulnerability
+  ]
+
 
 let evm_analyzer_command =
   Command.group ~summary:"Analysis tool for EVM" [
     ("opcodes", opcodes_command);
     ("analyze-traces", analyze_traces_command);
+    ("analyze-vulnerabilities", analyze_vulnerabilities_command);
   ]
 
 
