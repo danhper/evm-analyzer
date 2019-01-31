@@ -2,9 +2,8 @@ open Core
 open TracerTypes
 open FullTrace
 
-let with_result f db full_trace = match full_trace.result with
-  | None -> ()
-  | Some res -> f db res full_trace
+let with_result f db full_trace =
+  Option.iter ~f:(fun res -> f db res full_trace) full_trace.result
 
 let tag_output' db result { args; _ } =
   let f arg = FactDb.add_rel2 db "is_output" (result.StackValue.id, arg.StackValue.id) in
@@ -30,10 +29,34 @@ let tag_overflow' db result { trace; args; _ } =
   | _ -> ()
 let tag_overflow = with_result tag_overflow'
 
+let tag_signed db { trace; args; _ } =
+  match trace.Trace.op, args with
+  | Op.Signextend, [_bits; value] ->
+    FactDb.add_rel1 db "is_signed_operand" value.StackValue.id
+  | Op.Sdiv, [left; right]
+  | Op.Smod, [left; right]
+  | Op.Slt, [left; right]
+  | Op.Sgt, [left; right] ->
+    FactDb.add_rel1 db "is_signed_operand" left.StackValue.id;
+    FactDb.add_rel1 db "is_signed_operand" right.StackValue.id
+  | _ -> ()
+
+let tag_int_size db { trace; args; _ } =
+  match trace.Trace.op, args with
+  | Op.Signextend, [bits; value] ->
+    let int_size = ((BigInt.to_int bits.StackValue.value) + 1) * 8 in
+    FactDb.add_rel2 db "has_int_size" (value.StackValue.id, int_size)
+  | _ -> ()
+
 let tag_used_in_condition db { trace; args; _ } =
   match trace.Trace.op, args with
   | Op.Jumpi, [_dest; condition] ->
     FactDb.add_rel1 db "used_in_condition" condition.StackValue.id
   | _ -> ()
 
-let all = [tag_output; tag_storage; tag_overflow; tag_used_in_condition]
+let all = [tag_output;
+           tag_storage;
+           tag_overflow;
+           tag_used_in_condition;
+           tag_signed;
+           tag_int_size;]
