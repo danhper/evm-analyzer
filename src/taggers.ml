@@ -26,7 +26,7 @@ let tag_overflow' db result { trace; args; _ } =
     if a < b &&
       BigInt.is_power succ_a ~power:16 &&
       BigInt.is_power (BigInt.of_int (BigInt.log ~base:16 succ_a)) ~power:2
-        then FactDb.add_rel1 db "is_overflow" result.StackValue.id
+        then FactDb.add_rel1 db "is_unsigned_overflow" result.StackValue.id
   | _ -> ()
 let tag_overflow = with_result tag_overflow'
 
