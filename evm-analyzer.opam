@@ -9,10 +9,17 @@ homepage: "https://github.com/danhper/evm-analyzer"
 bug-reports: "https://github.com/danhper/evm-analyzer"
 build: ["dune" "build" "--root" "." "-j" jobs "@install"]
 depends: [
-  "core"                {>= "v0.11" & < "v0.12"}
-  "yojson"              {>= "1.5.0" & < "2.0"}
-  "zarith"              {>= "1.7"   & < "2.0"}
-  "ppx_import"          {>= "1.5"   & < "2.0"}
+  "core"                    {>= "v0.11" & < "v0.12"}
+  "yojson"                  {>= "1.5.0" & < "2.0"}
+  "zarith"                  {>= "1.7"   & < "2.0"}
+  "ppx_import"              {>= "1.5"   & < "2.0"}
+  "ppx_deriving"            {>= "4.2"   & < "5.0"}
+  "caqti"                   {>= "1.0"   & < "2.0"}
+  "caqti-driver-postgresql" {>= "1.0"   & < "2.0"}
+  "caqti-lwt"               {>= "1.0"   & < "2.0"}
+
+  "monads"   (* https://github.com/danhper/ocaml-monads.git#master *)
+  "datalog"  (* https://github.com/c-cube/datalog.git#master *)
 
   "dune"                {build & >= "1.0" & < "2.0"}
 ]
