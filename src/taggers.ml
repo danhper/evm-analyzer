@@ -57,9 +57,7 @@ let tag_overflow ~get_size ~cast_value ~name db result { trace; args; _ } =
     begin match get_size a.id, get_size b.id with
     | Some bits_a, Some bits_b ->
       let output_bits = Int.max bits_a bits_b in
-      let val_a = cast_value a.value bits_a in
-      let val_b = cast_value b.value bits_b in
-      let expected_result = cast_value (Op.execute_binary_op op val_a val_b) output_bits in
+      let expected_result = cast_value (Op.execute_binary_op op a.value b.value) output_bits in
       if expected_result <> result.value then
         FactDb.add_rel1 db name result.id
     | _ -> ()
@@ -74,7 +72,7 @@ let tag_signed_overflow = with_result tag_signed_overflow'
 
 let tag_unsigned_overflow' db result full_trace =
   let get_size id = FactDb.get_int db 1 (Printf.sprintf "uint_size(%d, N)" id) in
-  tag_overflow ~get_size ~cast_value:BigInt.twos_complement ~name:"is_unsigned_overflow"
+  tag_overflow ~get_size ~cast_value:BigInt.limit_bits ~name:"is_unsigned_overflow"
                 db result full_trace
 let tag_unsigned_overflow = with_result tag_unsigned_overflow'
 

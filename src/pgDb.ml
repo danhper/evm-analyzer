@@ -31,3 +31,6 @@ let get_vulnerable_contracts { db = (module Db: Caqti_lwt.CONNECTION); _ } vulne
 let get_contract_transactions ?(limit=30) ?(offset=0)
     { db = (module Db: Caqti_lwt.CONNECTION); _ } address =
   Db.collect_list transactions_query (address, limit, offset)
+
+let disconnect { db = (module Db: Caqti_lwt.CONNECTION); _ } =
+  Lwt.map (fun v -> Result.Ok v) (Db.disconnect ())
