@@ -228,7 +228,7 @@ let input_count t = match t with
 
 
 let has_result t = match t with
-  | Dup _ | Swap _ | Stop
+  | Dup _ | Swap _ | Stop | Unknown _ | Invalid
   | Calldatacopy | Codecopy | Extcodecopy | Returndatacopy
   | Pop | Mstore | Mstore8 | Sstore
   | Jump | Jumpi | Jumpdest
@@ -236,7 +236,7 @@ let has_result t = match t with
   | _ -> true
 
 let has_children t = match t with
-  | Call | Staticcall | Delegatecall -> true
+  | Call | Staticcall | Delegatecall | Create | Create2 -> true
   | _ -> false
 
 let execute_binary_op op a b =

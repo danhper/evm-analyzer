@@ -19,16 +19,18 @@ let parse_json struct_logs =
 
   let get_result traces =
     (* NOTE: result is the top value in the stack of the next trace *)
-    traces |> List.hd_exn |> member "stack" |> to_list
-    |> List.last_exn |> to_string
+    let f json = json |> member "stack" |> to_list
+      |> List.last_exn |> to_string in
+    traces |> List.hd |> Option.map ~f
   in
 
+  let get_op_string trace = trace |> member "op" |> to_string in
   let get_op trace rest =
-    let op_string = trace |> member "op" |> to_string in
+    let op_string = get_op_string trace in
     let full_op = if String.is_prefix ~prefix:"PUSH" op_string
       then
         let arg = get_result rest in
-        op_string ^ " " ^ arg
+        op_string ^ " " ^ (Option.value_exn arg)
       else op_string
     in
     Op.of_string full_op
@@ -41,6 +43,8 @@ let parse_json struct_logs =
     parse ~condition rest []
   and parse ~condition traces acc = match traces with
   | [] -> (List.rev acc, [])
+  | trace :: [] when String.is_prefix ~prefix:"PUSH" (get_op_string trace) ->
+    (List.rev acc, [])
   | trace :: _ when not (condition trace) -> (List.rev acc, traces)
   | trace :: rest ->
     index := !index + 1;
@@ -50,10 +54,12 @@ let parse_json struct_logs =
                              else ([], rest) in
     let result = match op with
     | Push (_, res) -> Some res
-    | op when Op.has_result op -> Some (BigInt.of_string_base 16 (get_result rest))
+    | op when Op.has_result op ->
+      Option.map ~f:(BigInt.of_string_base 16) (get_result rest)
     | _ -> None
     in
-    parse ~condition rest (make_trace ~op ~result ~index:(!index) ~children trace :: acc)
+    let new_trace = make_trace ~op ~result ~index:(!index) ~children trace in
+    parse ~condition rest (new_trace :: acc)
   in
 
   parse ~condition:(Fn.const true) (to_list struct_logs) [] |> fst

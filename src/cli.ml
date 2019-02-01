@@ -46,4 +46,5 @@ let evm_analyzer_command =
 
 
 let run () =
+  Logger.initialize ();
   Command.run ~build_info:"" ~version:"0.1" evm_analyzer_command

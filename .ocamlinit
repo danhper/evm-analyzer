@@ -1,2 +1,2 @@
-open Evm_analyzer
 open Core
+open Evm_analyzer

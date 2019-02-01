@@ -13,6 +13,8 @@ let transactions_query =
     Caqti_type.(tup3 string int int) Caqti_type.(tup2 string string)
     "SELECT hash, trace FROM transactions t
     WHERE t.to = ? AND trace IS NOT NULL
+      AND jsonb_typeof (trace->'structLogs') = 'array'
+      AND (trace->'failed')::boolean <> true
     LIMIT ?
     OFFSET ?"
 
