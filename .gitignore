@@ -33,3 +33,4 @@ evm-analyzer.install
 fixtures/
 
 .env
+results/
