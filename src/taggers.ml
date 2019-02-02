@@ -75,6 +75,13 @@ let tag_unsigned_overflow' db result full_trace =
                 db result full_trace
 let tag_unsigned_overflow = with_result tag_unsigned_overflow'
 
+let tag_failed_call' db result { trace; _ } =
+  match trace.op, result.StackValue.value with
+  | Op.Call, v when v = BigInt.zero ->
+    FactDb.add_rel1 db "failed_call" result.StackValue.id
+  | _ -> ()
+let tag_failed_call = with_result tag_failed_call'
+
 
 let all = [
   [tag_output;
@@ -83,6 +90,7 @@ let all = [
    tag_used_in_condition;
    tag_signed;
    tag_int_size;
+   tag_failed_call;
   ];
 
   [tag_signed_overflow;

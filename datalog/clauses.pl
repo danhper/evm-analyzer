@@ -30,6 +30,9 @@ is_overflow(A) :- is_signed_overflow(A), is_signed(A).
 modified_by_overflow(A) :- is_overflow(A).
 modified_by_overflow(A) :- is_overflow(B), depends(A, B).
 
+influences_condition(A) :- used_in_condition(A).
+influences_condition(A) :- depends(B, A), used_in_condition(B).
+
 path_modified_by_overflow(A) :- modified_by_overflow(A), used_in_condition(A).
 
 is_signed(A) :- is_signed_operand(A).
@@ -41,3 +44,5 @@ int_size(A, N) :- has_int_size(B, N), connected(A, B).
 
 uint_size(A, N) :- has_uint_size(A, N).
 uint_size(A, N) :- has_uint_size(B, N), connected(A, B).
+
+unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
