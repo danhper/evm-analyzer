@@ -54,9 +54,8 @@ let tag_overflow ~get_size ~cast_value ~name db result { trace; args; _ } =
   let open StackValue in
   match trace.Trace.op, args with
   | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b] ->
-    begin match get_size a.id, get_size b.id with
-    | Some bits_a, Some bits_b ->
-      let output_bits = Int.max bits_a bits_b in
+    begin match get_size result.id with
+    | Some output_bits ->
       let expected_result = cast_value (Op.execute_binary_op op a.value b.value) output_bits in
       if expected_result <> result.value then
         FactDb.add_rel1 db name result.id
