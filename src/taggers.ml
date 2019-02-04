@@ -53,13 +53,13 @@ let tag_used_in_condition db { trace; args; _ } =
 let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; args; _ } =
   let open StackValue in
   match trace.Trace.op, args with
-  | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b] ->
-    if should_check result.id then
-      let output_bits = Option.value ~default:256 (get_size result.id) in
-      let actual_result = Op.execute_binary_op op a.value b.value in
-      let expected_result = cast_value actual_result output_bits in
-      if expected_result <> actual_result then
-        FactDb.add_rel1 db name result.id
+  | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b]
+      when should_check result.id ->
+    let output_bits = Option.value ~default:256 (get_size result.id) in
+    let actual_result = Op.execute_binary_op op a.value b.value in
+    let expected_result = cast_value actual_result output_bits in
+    if expected_result <> actual_result then
+      FactDb.add_rel1 db name result.id
   | _ -> ()
 
 let tag_signed_overflow' db result full_trace =
