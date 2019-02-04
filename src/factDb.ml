@@ -1,3 +1,5 @@
+open Core
+
 module CI = Datalog_caml_interface
 
 type t = CI.Logic.DB.t
@@ -33,3 +35,6 @@ let get_int t index clause_string =
     | _ -> None
     end
   | _ -> None
+
+let get_bool t clause_string =
+  get_int t 0 clause_string |> Option.is_some

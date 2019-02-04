@@ -31,9 +31,10 @@ let analyze_vulnerabilities_command =
   ~summary:"Analyze vulnerabilities of different transactions"
   [%map_open
     let vulnerability = anon ("vulnerability" %: string)
+    and addresses = flag "addresses" (listed string) ~doc:"addresses to analize"
     and output = flag "output" (required string) ~doc:"path output" in
     fun () ->
-      Commands.analyze_vulnerabilities ~output vulnerability
+      Commands.analyze_vulnerabilities ~output ~addresses vulnerability
   ]
 
 

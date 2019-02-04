@@ -50,28 +50,29 @@ let tag_used_in_condition db { trace; args; _ } =
   | _ -> ()
 
 
-let tag_overflow ~get_size ~cast_value ~name db result { trace; args; _ } =
+let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; args; _ } =
   let open StackValue in
   match trace.Trace.op, args with
   | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b] ->
-    begin match get_size result.id with
-    | Some output_bits ->
-      let expected_result = cast_value (Op.execute_binary_op op a.value b.value) output_bits in
-      if expected_result <> result.value then
+    if should_check result.id then
+      let output_bits = Option.value ~default:256 (get_size result.id) in
+      let actual_result = Op.execute_binary_op op a.value b.value in
+      let expected_result = cast_value actual_result output_bits in
+      if expected_result <> actual_result then
         FactDb.add_rel1 db name result.id
-    | _ -> ()
-    end
   | _ -> ()
 
 let tag_signed_overflow' db result full_trace =
+  let should_check id = FactDb.get_bool db (Printf.sprintf "is_signed(%d)" id) in
   let get_size id = FactDb.get_int db 1 (Printf.sprintf "int_size(%d, N)" id) in
-  tag_overflow ~get_size ~cast_value:BigInt.twos_complement ~name:"is_signed_overflow"
+  tag_overflow ~get_size ~should_check ~cast_value:BigInt.twos_complement ~name:"is_signed_overflow"
                 db result full_trace
 let tag_signed_overflow = with_result tag_signed_overflow'
 
 let tag_unsigned_overflow' db result full_trace =
+  let should_check id = FactDb.get_bool db (Printf.sprintf "is_unsigned(%d)" id) in
   let get_size id = FactDb.get_int db 1 (Printf.sprintf "uint_size(%d, N)" id) in
-  tag_overflow ~get_size ~cast_value:BigInt.limit_bits ~name:"is_unsigned_overflow"
+  tag_overflow ~get_size ~should_check ~cast_value:BigInt.limit_bits ~name:"is_unsigned_overflow"
                 db result full_trace
 let tag_unsigned_overflow = with_result tag_unsigned_overflow'
 

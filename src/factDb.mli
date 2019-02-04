@@ -19,3 +19,4 @@ val query2: t -> String.t -> (Int.t * Int.t) List.t
 val query3: t -> String.t -> (Int.t * Int.t * Int.t) List.t
 
 val get_int: t -> Int.t -> String.t -> Int.t Option.t
+val get_bool: t -> String.t -> Bool.t

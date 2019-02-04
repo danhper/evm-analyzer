@@ -23,6 +23,10 @@ let analyze_traces ~debug filepath query =
   List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces
 
 
-let analyze_vulnerabilities ~output vulnerability =
-  let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output vulnerability in
+let analyze_vulnerabilities ~output ~addresses vulnerability =
+  let addresses = match addresses with
+  | [] -> None
+  | list -> Some list
+  in
+  let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output ?addresses vulnerability in
   PgMonad.full_run result
