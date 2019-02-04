@@ -236,7 +236,7 @@ let has_result t = match t with
   | _ -> true
 
 let has_children t = match t with
-  | Call | Staticcall | Delegatecall | Create | Create2 -> true
+  | Call | Staticcall | Delegatecall | Create | Create2 | Callcode -> true
   | _ -> false
 
 let execute_binary_op op a b =
