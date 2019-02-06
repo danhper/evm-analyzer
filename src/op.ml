@@ -128,6 +128,7 @@ let of_string string =
   | "SHR" -> Shr
   | "SAR" -> Sar
   | "KECCAK256" -> Keccak256
+  | "SHA3" -> Keccak256
   | "ADDRESS" -> Address
   | "BALANCE" -> Balance
   | "ORIGIN" -> Origin

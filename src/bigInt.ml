@@ -5,6 +5,15 @@ let pp f t = Format.pp_print_string f (Z.format "#0x%x" t)
 
 let two = of_int 2
 
+let of_hex raw_string =
+  let string =
+    if String.is_prefix ~prefix:"0x" raw_string
+      then String.drop_prefix raw_string 2
+      else raw_string
+  in
+  of_string_base 16 string
+
+
 let is_power ~power n =
   let rec is_power' n power =
     if n = one then true

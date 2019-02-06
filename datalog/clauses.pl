@@ -46,3 +46,7 @@ uint_size(A, N) :- has_uint_size(A, N).
 uint_size(A, N) :- has_uint_size(B, N), connected(A, B).
 
 unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
+
+call(A, B, V) :- direct_call(A, B, V).
+call(A, B, V) :- call(A, C, V), direct_call(C, B, V2).
+reentrant_call(A, B, V) :- call(A, B, V), call(B, A, V2), A != B.

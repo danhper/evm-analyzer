@@ -20,9 +20,10 @@ let analyze_traces_command =
   [%map_open
     let input_file = anon ("input-file" %: string)
     and query = anon ("query" %: string)
+    and contract_address = flag "contract-address" (optional string) ~doc:"contract address (for reentrancy)"
     and debug = flag "debug" no_arg ~doc:"debug mode" in
     fun () ->
-      Commands.analyze_traces ~debug input_file query
+      Commands.analyze_traces ~debug ~contract_address input_file query
   ]
 
 let analyze_vulnerabilities_command =

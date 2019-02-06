@@ -2,10 +2,11 @@ open Core
 open TracerTypes
 
 type t = {
-  taggers: (FactDb.t -> FullTrace.t -> unit) List.t List.t;
+  contract_address: String.t;
+  taggers: Tagger.t List.t List.t;
 }
 
-let create taggers = { taggers; }
+let create contract_address taggers = { contract_address; taggers; }
 
 let log ~debug ~env trace =
   let open Trace in
@@ -14,9 +15,16 @@ let log ~debug ~env trace =
     let op_code_str = Op.to_string trace.op in
     Out_channel.printf "%d: %s %s\n" trace.pc op_code_str stack_str
 
+let nested_call_address op args =
+  let open Op in
+  match op, args with
+  | (Call | Callcode | Staticcall | Delegatecall), (_gas :: addr :: _rest) ->
+    Some (addr.StackValue.value)
+  | _ -> None
+
 let execute_traces ?debug:(debug=false) t traces =
   let db = FactDb.create () in
-  let execute_trace ~env ~taggers trace =
+  let rec execute_trace ~env ~taggers trace =
     let open Trace in
     log ~debug ~env trace;
     match trace.op with
@@ -26,13 +34,17 @@ let execute_traces ?debug:(debug=false) t traces =
     let args_count = Op.input_count trace.op in
     let args = List.rev (List.init args_count ~f:(fun _ -> EStack.pop env.Env.stack)) in
     let result = Option.map ~f:(StackValue.create ~id:trace.Trace.index) trace.result in
-    let full_trace = FullTrace.({ result; args; trace; }) in
+    let full_trace = FullTrace.({ result; args; trace; env; }) in
     List.iter ~f:(fun t -> t db full_trace) taggers;
-    Option.iter result ~f:(EStack.push env.Env.stack)
+    Option.iter result ~f:(EStack.push env.Env.stack);
+    match trace.Trace.children with
+    | [] -> ()
+    | children ->
+      let new_address = Option.value ~default:env.address (nested_call_address trace.op args) in
+      execute_traces new_address children taggers
+  and execute_traces address traces taggers =
+    let env = Env.create address in
+    List.iter traces ~f:(execute_trace ~env ~taggers:taggers)
   in
-  let execute_traces taggers =
-    let env = Env.create () in
-    List.iter traces ~f:(execute_trace ~env ~taggers)
-  in
-  List.iter ~f:execute_traces t.taggers;
+  List.iter ~f:(execute_traces (BigInt.of_hex t.contract_address) traces) t.taggers;
   db

@@ -11,16 +11,19 @@ module StackValue = struct
   let copy t = t
 end
 
+module Env = struct
+  type t = [%import: TracerTypes.Env.t]
+
+  let create address = {
+    stack = EStack.create ~copy:StackValue.copy ();
+    address;
+  }
+end
+
 module FullTrace = struct
   type t = [%import: TracerTypes.FullTrace.t]
 end
 
 module Tagger = struct
   type t = [%import: TracerTypes.Tagger.t]
-end
-
-module Env = struct
-  type t = [%import: TracerTypes.Env.t]
-
-  let create () = { stack = EStack.create ~copy:StackValue.copy () }
 end

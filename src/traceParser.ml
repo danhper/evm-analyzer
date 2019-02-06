@@ -49,9 +49,11 @@ let parse_json struct_logs =
   | trace :: rest ->
     index := !index + 1;
     let op = get_op trace rest in
-    let (children, rest) = if Op.has_children op
-                             then make_call trace rest
-                             else ([], rest) in
+    let (children, rest) =
+      if Op.has_children op
+        then make_call trace rest
+        else ([], rest)
+    in
     let result = match op with
     | Push (_, res) -> Some res
     | op when Op.has_result op ->
