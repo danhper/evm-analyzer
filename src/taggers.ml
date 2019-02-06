@@ -84,7 +84,8 @@ let tag_failed_call' db result { trace; _ } =
 let tag_failed_call = with_result tag_failed_call'
 
 let tag_call db { trace; env; args; _ } =
-  let call = FactDb.get_rel3 ~k1:FactDb.T.bigint_key ~k2:FactDb.T.bigint_key ~k3:FactDb.T.int "call" in
+  let module T = FactDb.Types in
+  let call = FactDb.get_rel3 ~k1:T.bigint_key ~k2:T.bigint_key ~k3:T.int "call" in
   let open Op in
   match trace.op, args with
   | (Call | Callcode), (_gas :: addr :: value :: _rest) ->

@@ -19,7 +19,7 @@ let analyze_traces ~debug ~contract_address filepath query =
   let contract_address = Option.value ~default:"0x0" contract_address in
   let tracer = Tracer.create contract_address Taggers.all in
   let db = Tracer.execute_traces ~debug tracer traces in
-  let trace_indexes = FactDb.query1 db (FactDb.get_rel1 ~k:FactDb.T.int query) in
+  let trace_indexes = FactDb.query1 db (FactDb.get_rel1 ~k:FactDb.Types.int query) in
   let traces = List.map ~f:(Fn.flip Yojson.Safe.Util.index struct_logs) trace_indexes in
   List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces
 
