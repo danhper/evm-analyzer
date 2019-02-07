@@ -16,10 +16,7 @@
 % int_size(A, N) - A has an inferred int_size of N
 
 depends(A, B) :- is_output(A, B).
-depends(A, B) :- is_output(A, C), depends(C, B).
-
-connected(A, B) :- depends(A, B).
-connected(A, B) :- depends(B, A).
+depends(A, B) :- depends(A, B), is_output(B, C).
 
 depends_on_storage(A) :- uses_storage(A).
 depends_on_storage(A) :- uses_storage(B), depends(A, B).
@@ -36,14 +33,14 @@ influences_condition(A) :- depends(B, A), used_in_condition(B).
 path_modified_by_overflow(A) :- modified_by_overflow(A), used_in_condition(A).
 
 is_signed(A) :- is_signed_operand(A).
-is_signed(A) :- is_signed_operand(B), connected(A, B).
+is_signed(A) :- depends(A, B), is_signed_operand(B).
 is_unsigned(A) :- ~is_signed(A).
 
 int_size(A, N) :- has_int_size(A, N).
-int_size(A, N) :- has_int_size(B, N), depends(A, B).
+int_size(A, N) :- depends(A, B), has_int_size(B, N).
 
 uint_size(A, N) :- has_uint_size(A, N).
-uint_size(A, N) :- has_uint_size(B, N), depends(B, A).
+uint_size(A, N) :- depends(A, B), has_uint_size(B, N).
 
 unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
 
