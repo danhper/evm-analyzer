@@ -5,3 +5,7 @@ include Monads.Std.Monad.Result.S
     and type err := Caqti_error.t
 
 val full_run: unit t -> unit
+
+module LwtMonad: sig
+  include Monads.Std.Monad.S with type 'a t := 'a Lwt.t
+end
