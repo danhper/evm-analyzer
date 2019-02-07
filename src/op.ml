@@ -246,7 +246,7 @@ let execute_binary_op op a b =
   | Add -> a + b
   | Sub -> a - b
   | Mul -> a * b
-  | Div -> a / b
-  | Sdiv -> a / b
+  | Div -> if b = zero then zero else a / b
+  | Sdiv -> if b = zero then zero else a / b
   | Exp -> pow a (to_int b)
   | _ -> failwith "op not supported"
