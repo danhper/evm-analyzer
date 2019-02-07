@@ -40,10 +40,10 @@ is_signed(A) :- is_signed_operand(B), connected(A, B).
 is_unsigned(A) :- ~is_signed(A).
 
 int_size(A, N) :- has_int_size(A, N).
-int_size(A, N) :- has_int_size(B, N), connected(A, B).
+int_size(A, N) :- has_int_size(B, N), depends(A, B).
 
 uint_size(A, N) :- has_uint_size(A, N).
-uint_size(A, N) :- has_uint_size(B, N), connected(A, B).
+uint_size(A, N) :- has_uint_size(B, N), depends(B, A).
 
 unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
 
