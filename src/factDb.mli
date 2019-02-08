@@ -12,6 +12,13 @@ module Rel4: sig
   val add_list: CI.Logic.DB.t -> ('a,'b,'c,'d) t -> ('a * 'b * 'c * 'd) List.t -> unit
 end
 
+module Rel5: sig
+  type ('a,'b,'c,'d,'e) t = CI.const * 'a CI.Univ.key * 'b CI.Univ.key * 'c CI.Univ.key * 'd CI.Univ.key * 'e CI.Univ.key
+  val create: ?k1:'a CI.Univ.key -> ?k2:'b CI.Univ.key -> ?k3:'c CI.Univ.key
+           -> ?k4:'d CI.Univ.key -> ?k5:'e CI.Univ.key -> String.t -> ('a,'b,'c,'d,'e) t
+  val add_list: CI.Logic.DB.t -> ('a,'b,'c,'d,'e) t -> ('a * 'b * 'c * 'd * 'e) List.t -> unit
+end
+
 module Types: sig
   val bigint_key: BigInt.t CI.Univ.key
   val int: Int.t CI.Univ.key
@@ -30,11 +37,14 @@ val get_rel2: k1:'a CI.Univ.key -> k2:'b CI.Univ.key -> String.t -> ('a, 'b) CI.
 val get_rel3: k1:'a CI.Univ.key -> k2:'b CI.Univ.key -> k3:'c CI.Univ.key -> String.t -> ('a, 'b, 'c) CI.Rel3.t
 val get_rel4: k1:'a CI.Univ.key -> k2:'b CI.Univ.key -> k3:'c CI.Univ.key ->
               k4:'d CI.Univ.key -> String.t -> ('a, 'b, 'c, 'd) Rel4.t
+val get_rel5: k1:'a CI.Univ.key -> k2:'b CI.Univ.key -> k3:'c CI.Univ.key ->
+              k4:'d CI.Univ.key -> k5:'e CI.Univ.key -> String.t -> ('a, 'b, 'c, 'd, 'e) Rel5.t
 
 val add_rel1: t -> 'a CI.Rel1.t -> 'a -> unit
 val add_rel2: t -> ('a, 'b) CI.Rel2.t -> ('a * 'b) -> unit
 val add_rel3: t -> ('a, 'b, 'c) CI.Rel3.t -> ('a * 'b * 'c) -> unit
 val add_rel4: t -> ('a, 'b, 'c, 'd) Rel4.t -> ('a * 'b * 'c * 'd) -> unit
+val add_rel5: t -> ('a, 'b, 'c, 'd, 'e) Rel5.t -> ('a * 'b * 'c * 'd * 'e) -> unit
 
 val add_int_rel1: t -> String.t -> Int.t -> unit
 val add_int_rel2: t -> String.t -> (Int.t * Int.t) -> unit
@@ -44,7 +54,15 @@ val add_int_rel3: t -> String.t -> (Int.t * Int.t * Int.t) -> unit
 val query1: t -> 'a CI.Rel1.t -> 'a List.t
 val query2: t -> ('a, 'b) CI.Rel2.t -> ('a * 'b) List.t
 val query3: t -> ('a, 'b, 'c) CI.Rel3.t -> ('a * 'b * 'c) List.t
-val query4: t -> ('a, 'b, 'c, 'c) Rel4.t -> ('a * 'b * 'c * 'c) List.t
+val query4: t -> ('a, 'b, 'c, 'd) Rel4.t -> ('a * 'b * 'c * 'd) List.t
+val query5: t -> ('a, 'b, 'c, 'd, 'e) Rel5.t -> ('a * 'b * 'c * 'd * 'e) List.t
 
 val get_int: t -> Int.t -> String.t -> Int.t Option.t
 val get_bool: t -> String.t -> Bool.t
+
+
+module Relations: sig
+  val reentrant_call: (Int.t, BigInt.t, BigInt.t, BigInt.t, BigInt.t) Rel5.t
+  val direct_call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
+  val call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
+end

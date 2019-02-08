@@ -1,2 +1,5 @@
 open Core
 open Evm_analyzer
+module CI = Datalog_caml_interface
+#install_printer BigInt.pp
+#install_printer FactDb.CI.Logic.T.fmt

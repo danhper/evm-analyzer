@@ -1,3 +1,5 @@
+open Core
+
 include module type of Z
 
 val pp: Format.formatter -> t -> unit
@@ -15,3 +17,5 @@ val uint_size: t -> int
 val twos_complement: t -> int -> t
 
 val limit_bits: t -> int -> t
+
+include Comparator.S with type t := t

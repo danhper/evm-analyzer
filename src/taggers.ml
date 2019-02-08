@@ -94,14 +94,16 @@ let tag_empty_delegate_call' db result { trace; args; _ } =
   | _ -> ()
 let tag_empty_delegate_call = with_result tag_empty_delegate_call'
 
-let tag_call db { trace; env; args; _ } =
+let tag_call' db result { trace; env; args; _ } =
   let module T = FactDb.Types in
-  let call = FactDb.get_rel3 ~k1:T.bigint_key ~k2:T.bigint_key ~k3:T.bigint_key "call" in
+  let call = FactDb.get_rel4 ~k1:T.int ~k2:T.bigint_key ~k3:T.bigint_key ~k4:T.bigint_key "direct_call" in
   let open Op in
   match trace.op, args with
-  | (Call | Callcode), (_gas :: addr :: value :: _rest) ->
-    FactDb.add_rel3 db call (env.Env.address, addr.value, value.value)
+  | (Call | Callcode), (_gas :: addr :: value :: _rest)
+      when result.StackValue.value = BigInt.one ->
+    FactDb.add_rel4 db call (result.StackValue.id, env.Env.address, addr.value, value.value)
   | _ -> ()
+let tag_call = with_result tag_call'
 
 let all = [
   [tag_output;

@@ -1,6 +1,8 @@
 open Core
 include Z
 
+
+
 let pp f t = Format.pp_print_string f (Z.format "#0x%x" t)
 
 let two = of_int 2
@@ -52,3 +54,12 @@ let twos_complement n bits =
     else n - (one lsl bits)
 
 let limit_bits n bits = n land ((one lsl bits) - one)
+
+module T = struct
+  type t = Z.t
+  let compare = Z.compare
+  let sexp_of_t t = Sexp.of_string (to_hex t)
+end
+
+
+include Comparator.Make(T)

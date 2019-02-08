@@ -11,12 +11,35 @@ let create url =
 let transactions_query =
   Caqti_request.collect
     Caqti_type.(tup3 string int int) Caqti_type.(tup2 string string)
-    "SELECT hash, trace FROM transactions t
-    WHERE t.to = ? AND trace IS NOT NULL
-      AND jsonb_typeof (trace->'structLogs') = 'array'
-      AND (trace->'failed')::boolean <> true
-    LIMIT ?
-    OFFSET ?"
+    "SELECT hash, trace
+     FROM transactions t
+     WHERE t.to = ?
+        AND trace IS NOT NULL
+        AND jsonb_typeof (trace->'structLogs') = 'array'
+        AND (trace->'failed')::boolean <> true
+     LIMIT ?
+     OFFSET ?"
+
+let indirect_transactions_query =
+  Caqti_request.collect
+    Caqti_type.(tup3 string int int) Caqti_type.(tup2 string string)
+    "SELECT t.hash, t.trace
+     FROM transactions t
+     WHERE t.to = $1
+        AND t.trace IS NOT NULL
+        AND jsonb_typeof (t.trace->'structLogs') = 'array'
+        AND (t.trace->'failed')::boolean <> true
+    UNION
+    SELECT t.hash, t.trace
+     FROM transactions t
+     JOIN traces tr
+     ON tr.hash = t.hash
+     WHERE (tr.to = $1 OR tr.from = $1)
+        AND trace IS NOT NULL
+        AND jsonb_typeof (t.trace->'structLogs') = 'array'
+        AND (t.trace->'failed')::boolean <> true
+     LIMIT $2
+     OFFSET $3"
 
 let vulnerable_contracts_query =
   Caqti_request.collect
@@ -28,9 +51,10 @@ let vulnerable_contracts_query =
 let get_vulnerable_contracts { db = (module Db: Caqti_lwt.CONNECTION); _ } vulnerability =
   Db.collect_list vulnerable_contracts_query vulnerability
 
-let get_contract_transactions ?(limit=30) ?(offset=0)
+let get_contract_transactions ?(include_indirect=false) ?(limit=30) ?(offset=0)
     { db = (module Db: Caqti_lwt.CONNECTION); _ } address =
-  Db.collect_list transactions_query (address, limit, offset)
+  let query = if include_indirect then indirect_transactions_query else transactions_query in
+  Db.collect_list query (address, limit, offset)
 
 let disconnect { db = (module Db: Caqti_lwt.CONNECTION); _ } =
   Lwt.map (fun v -> Result.Ok v) (Db.disconnect ())
