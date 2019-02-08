@@ -83,6 +83,16 @@ let tag_failed_call' db result { trace; _ } =
   | _ -> ()
 let tag_failed_call = with_result tag_failed_call'
 
+let tag_failed_delegate_call' db result { trace; args; _ } =
+  let open StackValue in
+  match trace.op, args, result with
+  | (Op.Delegatecall | Op.Staticcall),
+        { id = top_id; _ ;} :: _, { id = result_id; _; }
+      when result_id = top_id + 1 ->
+    FactDb.add_int_rel1 db "empty_call" result.StackValue.id
+  | _ -> ()
+let tag_failed_delegate_call = with_result tag_failed_delegate_call'
+
 let tag_call db { trace; env; args; _ } =
   let module T = FactDb.Types in
   let call = FactDb.get_rel3 ~k1:T.bigint_key ~k2:T.bigint_key ~k3:T.bigint_key "call" in
@@ -100,6 +110,7 @@ let all = [
    tag_signed;
    tag_int_size;
    tag_failed_call;
+   tag_failed_delegate_call;
    tag_call;
   ];
 
@@ -107,3 +118,13 @@ let all = [
    tag_unsigned_overflow;
   ]
 ]
+
+let for_vulnerability vulnerability_type = match vulnerability_type with
+  | "integer-overflow" ->
+    [[tag_output; tag_uint_size; tag_int_size; tag_signed];
+     [tag_signed_overflow; tag_unsigned_overflow]]
+  | "unhandled-exception" ->
+    [[tag_failed_call; tag_used_in_condition;]]
+  | "reentrancy" ->
+    [[tag_call;]]
+  | _ -> failwithf "unknown vulnerability %s" vulnerability_type ()
