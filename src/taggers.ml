@@ -85,11 +85,12 @@ let tag_failed_call = with_result tag_failed_call'
 
 let tag_empty_delegate_call' db result { trace; args; _ } =
   let open StackValue in
+  let call_entry_rel = FactDb.get_rel2 "call_entry" ~k1:FactDb.Types.int ~k2:FactDb.Types.bigint_key in
   match trace.op, args, result with
   | (Op.Delegatecall | Op.Staticcall),
-        { id = top_id; _ ;} :: _, { id = result_id; _; }
-      when result_id = top_id + 1 ->
-    FactDb.add_int_rel1 db "empty_call" result.StackValue.id
+        { id = top_id; _ ;} :: { value = address; _; } :: _, { id = result_id; _; } ->
+    FactDb.add_rel2 db call_entry_rel (top_id, address);
+    FactDb.add_int_rel1 db "call_exit" result_id;
   | _ -> ()
 let tag_empty_delegate_call = with_result tag_empty_delegate_call'
 

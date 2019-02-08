@@ -47,3 +47,5 @@ unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
 call(A, B, V) :- direct_call(A, B, V).
 call(A, B, V) :- call(A, C, V), direct_call(C, B, V2).
 reentrant_call(A, B, V, V2) :- call(A, B, V), call(B, A, V2), A != B.
+
+empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).

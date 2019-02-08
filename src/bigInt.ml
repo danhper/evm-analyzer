@@ -13,6 +13,7 @@ let of_hex raw_string =
   in
   of_string_base 16 string
 
+let to_hex = format "#0x%x"
 
 let is_power ~power n =
   let rec is_power' n power =

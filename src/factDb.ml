@@ -58,9 +58,15 @@ module Types = struct
   let string = CI.Univ.string
 end
 
+let add_successor db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "successor")
+    (fun a b -> a = b + 1)
+
 let create () =
   let db = CI.Logic.DB.create () in
   CI.add_builtin db;
+  add_successor db;
   let () = match CI.Parse.parse_string Generated.clauses with
   | `Ok clauses -> CI.Logic.DB.add_clauses db clauses
   | `Error _ -> failwith "could not parse clauses"
