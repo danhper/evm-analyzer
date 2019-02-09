@@ -58,10 +58,16 @@ let to_json t =
 
 let of_json json =
   let open Yojson.Safe.Util in
+  let get_float value =
+    match value with
+    | `Float v -> v
+    | `Int v -> Float.of_int v
+    | _ -> failwithf "expected int or float, got %s" (Yojson.Safe.to_string value) ()
+  in
   { alice = json |> member "alice" |> to_string;
     bob = json |> member "bob" |> to_string;
-    alice_amount = json |> member "alice_amount" |> to_float |> EthUtil.wei_of_eth;
-    bob_amount = json |> member "bob_amount" |> to_float |> EthUtil.wei_of_eth;
+    alice_amount = json |> member "alice_amount" |> get_float |> EthUtil.wei_of_eth;
+    bob_amount = json |> member "bob_amount" |> get_float |> EthUtil.wei_of_eth;
     bob_calls = json |> member "alice_calls" |> to_int;
     alice_calls = json |> member "bob_calls" |> to_int;
   }
