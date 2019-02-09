@@ -1,3 +1,4 @@
 results/unhandled-exception.jsonl filter=lfs diff=lfs merge=lfs -text
 results/locked-ether.jsonl filter=lfs diff=lfs merge=lfs -text
 results/reentrancy.jsonl filter=lfs diff=lfs merge=lfs -text
+results/integer-overflow.jsonl filter=lfs diff=lfs merge=lfs -text
