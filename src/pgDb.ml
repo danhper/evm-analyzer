@@ -44,7 +44,7 @@ let indirect_transactions_query =
 let vulnerable_contracts_query =
   Caqti_request.collect
     Caqti_type.string Caqti_type.string
-    "SELECT address FROM contracts c
+    "SELECT DISTINCT address FROM contracts c
     JOIN vulnerability_reports vr on c.address = vr.contract_address
     WHERE vr.vulnerability_name = ?"
 
