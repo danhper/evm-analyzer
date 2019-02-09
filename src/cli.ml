@@ -38,12 +38,29 @@ let analyze_vulnerabilities_command =
       Commands.analyze_vulnerabilities ~output ~addresses vulnerability
   ]
 
+let analyze_reentrancy_results_command =
+  let open Command.Let_syntax in
+  Command.basic
+  ~summary:"Analyze reentrancy results"
+  [%map_open
+    let file = anon ("file" %: string)
+    and min_value = flag "min-value" (optional int) ~doc:"minimum exploit value" in
+    fun () ->
+      Commands.analyze_reentrancy_results ?min_value file
+  ]
+
+let analyze_results_command =
+  Command.group ~summary:"Analyze results" [
+    ("reentrancy", analyze_reentrancy_results_command)
+  ]
+
 
 let evm_analyzer_command =
   Command.group ~summary:"Analysis tool for EVM" [
     ("opcodes", opcodes_command);
     ("analyze-traces", analyze_traces_command);
     ("analyze-vulnerabilities", analyze_vulnerabilities_command);
+    ("analyze-results", analyze_results_command);
   ]
 
 

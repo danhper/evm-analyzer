@@ -100,7 +100,7 @@ let tag_call' db result { trace; env; args; _ } =
   let open Op in
   match trace.op, args with
   | (Call | Callcode), (gas :: addr :: value :: _rest)
-      when result.StackValue.value = BigInt.one ->
+      when value.value > BigInt.zero && result.StackValue.value = BigInt.one ->
     FactDb.add_rel4 db call (gas.StackValue.id, env.Env.address, addr.value, value.value)
   | _ -> ()
 let tag_call = with_result tag_call'

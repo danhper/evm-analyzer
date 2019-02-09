@@ -36,3 +36,9 @@ let analyze_vulnerabilities ~output ~addresses vulnerability =
   in
   let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output ?addresses vulnerability in
   PgMonad.full_run result
+
+
+let analyze_reentrancy_results ?(min_value=0) input =
+  let module CR = ReentrantCall.ContractResult in
+  let result = CR.analyze_file ~min_value input in
+  List.iter ~f:(Fn.compose print_endline CR.to_string) result
