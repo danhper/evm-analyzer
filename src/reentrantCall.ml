@@ -18,11 +18,13 @@ let aggregate_calls db =
   let f acc (_index, addr1, addr2, value) =
     let key, record = if addr1 > addr2
       then ((addr1, addr2),
-            { alice = BigInt.to_hex addr1; bob = BigInt.to_hex addr2; alice_amount = value;
-             bob_amount = BigInt.zero; alice_calls = 1; bob_calls = 0; })
+            { alice = BigInt.to_hex ~length:40 addr1;
+              bob = BigInt.to_hex ~length:40 addr2; alice_amount = value;
+              bob_amount = BigInt.zero; alice_calls = 1; bob_calls = 0; })
       else ((addr2, addr1),
-            { alice = BigInt.to_hex addr2; bob = BigInt.to_hex addr1; alice_amount = BigInt.zero;
-             bob_amount = value; alice_calls = 0; bob_calls = 1; })
+            { alice = BigInt.to_hex ~length:40 addr2;
+              bob = BigInt.to_hex ~length:40 addr1; alice_amount = BigInt.zero;
+              bob_amount = value; alice_calls = 0; bob_calls = 1; })
     in
     let make_update current = match current with
     | None -> record

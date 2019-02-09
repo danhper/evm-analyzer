@@ -100,7 +100,7 @@ module Types = struct
   let bigint_key = CI.Univ.new_key
                     ~eq:BigInt.equal
                     ~hash:BigInt.hash
-                    ~print:(BigInt.format "#0x%x")
+                    ~print:BigInt.to_hex
                     ()
   let int = CI.Univ.int
   let string = CI.Univ.string

@@ -2,8 +2,7 @@ open Core
 include Z
 
 
-
-let pp f t = Format.pp_print_string f (Z.format "#0x%x" t)
+let pp f t = Format.pp_print_string f (format "#0x%x" t)
 
 let two = of_int 2
 
@@ -15,7 +14,14 @@ let of_hex raw_string =
   in
   of_string_base 16 string
 
-let to_hex = format "#0x%x"
+let to_hex ?length t =
+  let formatted = format "%x" t in
+  let f n =
+    let padding = Int.(n - (String.length formatted)) in
+    String.make (Int.max 0 padding) '0' ^ formatted
+  in
+  let padded = Option.value_map ~default:formatted ~f length in
+  "0x" ^ padded
 
 let is_power ~power n =
   let rec is_power' n power =
@@ -56,8 +62,8 @@ let twos_complement n bits =
 let limit_bits n bits = n land ((one lsl bits) - one)
 
 module T = struct
-  type t = Z.t
-  let compare = Z.compare
+  type nonrec t = t
+  let compare = compare
   let sexp_of_t t = Sexp.of_string (to_hex t)
 end
 

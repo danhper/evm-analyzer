@@ -201,7 +201,7 @@ let size op = match op with
 
 let to_string t = match t with
   | Push (n, value) ->
-    Printf.sprintf "PUSH%d %s" n (BigInt.format "#0x%x" value)
+    Printf.sprintf "PUSH%d %s" n (BigInt.to_hex value)
   | Dup n -> Printf.sprintf "DUP%d" n
   | Swap n -> Printf.sprintf "SWAP%d" n
   | _ -> String.uppercase (show t)

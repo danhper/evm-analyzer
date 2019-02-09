@@ -99,9 +99,9 @@ let tag_call' db result { trace; env; args; _ } =
   let call = FactDb.get_rel4 ~k1:T.int ~k2:T.bigint_key ~k3:T.bigint_key ~k4:T.bigint_key "direct_call" in
   let open Op in
   match trace.op, args with
-  | (Call | Callcode), (_gas :: addr :: value :: _rest)
+  | (Call | Callcode), (gas :: addr :: value :: _rest)
       when result.StackValue.value = BigInt.one ->
-    FactDb.add_rel4 db call (result.StackValue.id, env.Env.address, addr.value, value.value)
+    FactDb.add_rel4 db call (gas.StackValue.id, env.Env.address, addr.value, value.value)
   | _ -> ()
 let tag_call = with_result tag_call'
 
