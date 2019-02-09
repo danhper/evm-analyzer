@@ -2,6 +2,8 @@ open Core
 
 module LwtMonad = PgMonad.LwtMonad
 
+type t = Rpc.call -> Rpc.response Lwt.t
+
 let new_client url =
   let open LwtMonad.Let_syntax in
   let module Client = Cohttp_lwt_unix.Client in
@@ -23,10 +25,17 @@ module Eth = struct
   open LwtMonad.Let_syntax
   open Rpc
 
-  let get_code rpc address tag =
-    let call = { name = "eth_getCode"; params = [String address; String tag]; } in
-    let%map result = rpc call in
-    match result with
+  let make_call rpc name params = rpc { name; params; }
+
+  let get_string_response_exn result = match result with
     | { success = true; contents = Rpc.String res; } -> res
     | v -> failwithf "unexpected response: %s" (Rpc.string_of_response v) ()
+
+  let get_code ?(tag="latest") rpc address =
+    let%map result = make_call rpc "eth_getCode" [String address; String tag] in
+    get_string_response_exn result
+
+  let get_balance ?(tag="latest") rpc address =
+    let%map result = make_call rpc "eth_getBalance" [String address; String tag] in
+    result |> get_string_response_exn |> BigInt.of_string
 end

@@ -44,7 +44,7 @@ let analyze_reentrancy_results_command =
   ~summary:"Analyze reentrancy results"
   [%map_open
     let file = anon ("file" %: string)
-    and min_value = flag "min-value" (optional int) ~doc:"minimum exploit value" in
+    and min_value = flag "min-value" (optional float) ~doc:"minimum exploit value" in
     fun () ->
       Commands.analyze_reentrancy_results ?min_value file
   ]
