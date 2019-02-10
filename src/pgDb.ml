@@ -10,8 +10,8 @@ let create url =
 
 let transactions_query =
   Caqti_request.collect
-    Caqti_type.(tup3 string int int) Caqti_type.(tup3 string string string)
-    "SELECT t.hash, t.trace, t.to
+    Caqti_type.(tup3 string int int) Caqti_type.(tup4 string string string int)
+    "SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
      FROM transactions t
      WHERE t.to = ?
         AND trace IS NOT NULL
@@ -22,15 +22,15 @@ let transactions_query =
 
 let indirect_transactions_query =
   Caqti_request.collect
-    Caqti_type.(tup3 string int int) Caqti_type.(tup3 string string string)
-    "SELECT t.hash, t.trace, t.to
+    Caqti_type.(tup3 string int int) Caqti_type.(tup4 string string string int)
+    "SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
      FROM transactions t
      WHERE t.to = $1
         AND t.trace IS NOT NULL
         AND jsonb_typeof (t.trace->'structLogs') = 'array'
         AND (t.trace->'failed')::boolean <> true
     UNION
-    SELECT t.hash, t.trace, t.to
+    SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
      FROM transactions t
      JOIN traces tr
      ON tr.hash = t.hash

@@ -2,6 +2,7 @@ open Core
 
 type t
 
-val create: String.t -> TracerTypes.Tagger.t List.t List.t -> t
+val create: block_number:Int.t -> tx_hash:String.t ->
+    taggers:TracerTypes.Tagger.t List.t List.t -> String.t -> t
 
-val execute_traces: ?debug:bool -> t -> Trace.t List.t -> FactDb.t
+val execute_traces: ?debug:bool -> ?db:FactDb.t -> t -> Trace.t List.t -> FactDb.t

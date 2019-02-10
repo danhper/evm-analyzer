@@ -49,3 +49,7 @@ call(I, A, B, V) :- call(I2, A, C, V), direct_call(I, C, B, V2).
 reentrant_call(I, A, B, V, V2) :- call(I, A, B, V), call(I2, B, A, V2), A != B.
 
 empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).
+
+% tx_sstore(B, T, I).
+% tx_sload(B, T, I).
+tod(B, T, T2) :- tx_sstore(B, T, I), tx_sload(B, T2, I), T != T2.

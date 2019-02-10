@@ -14,10 +14,12 @@ end
 module Env: sig
   type t = {
     stack: StackValue.t EStack.t;
+    block_number: Int.t;
+    tx_hash: String.t;
     address: BigInt.t;
   }
 
-  val create: BigInt.t -> t
+  val create: block_number:Int.t -> tx_hash:String.t -> BigInt.t -> t
 end
 
 module FullTrace: sig

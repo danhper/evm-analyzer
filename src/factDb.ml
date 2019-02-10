@@ -172,4 +172,8 @@ module Relations = struct
                              ~k4:Types.bigint_key "direct_call"
   let call = get_rel4 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
                       ~k4:Types.bigint_key "direct_call"
+
+  let tx_sstore = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.bigint_key "tx_sstore"
+  let tx_sload = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.bigint_key "tx_sload"
+  let tod = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.string "tod"
 end

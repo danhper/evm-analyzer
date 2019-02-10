@@ -17,7 +17,7 @@ let analyze_traces ~debug ~contract_address filepath query =
   let struct_logs = Yojson.Safe.Util.member "structLogs" json in
   let traces = TraceParser.parse_json struct_logs in
   let contract_address = Option.value ~default:"0x0" contract_address in
-  let tracer = Tracer.create contract_address Taggers.all in
+  let tracer = Tracer.create ~block_number:0 ~tx_hash:"0x" ~taggers:Taggers.all contract_address in
   let db = Tracer.execute_traces ~debug tracer traces in
   if String.contains query '('
     then

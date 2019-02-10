@@ -14,8 +14,10 @@ end
 module Env = struct
   type t = [%import: TracerTypes.Env.t]
 
-  let create address = {
+  let create ~block_number ~tx_hash address = {
     stack = EStack.create ~copy:StackValue.copy ();
+    block_number;
+    tx_hash;
     address;
   }
 end

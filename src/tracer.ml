@@ -3,10 +3,13 @@ open TracerTypes
 
 type t = {
   contract_address: String.t;
+  tx_hash: String.t;
+  block_number: Int.t;
   taggers: Tagger.t List.t List.t;
 }
 
-let create contract_address taggers = { contract_address; taggers; }
+let create ~block_number ~tx_hash ~taggers contract_address =
+  { contract_address; taggers; tx_hash; block_number; }
 
 let log ~debug ~env trace =
   let open Trace in
@@ -22,8 +25,8 @@ let nested_call_address op args =
     Some (addr.StackValue.value)
   | _ -> None
 
-let execute_traces ?debug:(debug=false) t traces =
-  let db = FactDb.create () in
+let execute_traces ?debug:(debug=false) ?db t traces =
+  let db = Option.value ~default:(FactDb.create ()) db in
   let rec execute_trace ~env ~taggers trace =
     let open Trace in
     log ~debug ~env trace;
@@ -43,7 +46,7 @@ let execute_traces ?debug:(debug=false) t traces =
       let new_address = Option.value ~default:env.address (nested_call_address trace.op args) in
       execute_traces new_address children taggers
   and execute_traces address traces taggers =
-    let env = Env.create address in
+    let env = Env.create ~block_number:t.block_number ~tx_hash:t.tx_hash address in
     List.iter traces ~f:(execute_trace ~env ~taggers:taggers)
   in
   List.iter ~f:(execute_traces (BigInt.of_hex t.contract_address) traces) t.taggers;

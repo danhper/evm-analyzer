@@ -96,14 +96,29 @@ let tag_empty_delegate_call = with_result tag_empty_delegate_call'
 
 let tag_call' db result { trace; env; args; _ } =
   let module T = FactDb.Types in
-  let call = FactDb.get_rel4 ~k1:T.int ~k2:T.bigint_key ~k3:T.bigint_key ~k4:T.bigint_key "direct_call" in
   let open Op in
   match trace.op, args with
   | (Call | Callcode), (gas :: addr :: value :: _rest)
       when result.StackValue.value = BigInt.one ->
-    FactDb.add_rel4 db call (gas.StackValue.id, env.Env.address, addr.value, value.value)
+    let db_args = (gas.StackValue.id, env.Env.address, addr.value, value.value) in
+    FactDb.add_rel4 db FactDb.Relations.direct_call db_args
   | _ -> ()
 let tag_call = with_result tag_call'
+
+let tag_tx_sstore db { trace; env; args; _ } =
+  match trace.op, args with
+  | Op.Sstore, key :: _ ->
+    let db_args = (env.Env.block_number, env.Env.tx_hash, key.value) in
+    FactDb.add_rel3 db FactDb.Relations.tx_sstore db_args
+  | _ -> ()
+
+let tag_tx_sload db { trace; env; args; _ } =
+  match trace.op, args with
+  | Op.Sload, key :: _ ->
+    let db_args = (env.Env.block_number, env.Env.tx_hash, key.value) in
+    FactDb.add_rel3 db FactDb.Relations.tx_sload db_args
+  | _ -> ()
+
 
 let all = [
   [tag_output;
@@ -132,4 +147,6 @@ let for_vulnerability vulnerability_type = match vulnerability_type with
     [[tag_call;]]
   | "locked-ether" ->
     [[tag_empty_delegate_call;]]
+  | "tod" ->
+    [[tag_tx_sload; tag_tx_sstore;]]
   | _ -> failwithf "unknown vulnerability %s" vulnerability_type ()
