@@ -7,6 +7,8 @@ val pp: Format.formatter -> t -> unit
 val of_hex: String.t -> t
 val to_hex: ?length:Int.t -> t -> String.t
 
+val typ_of: t Rpc.Types.typ
+
 val is_power: power:int -> t -> bool
 
 val log: base:int -> t -> int

@@ -45,7 +45,8 @@ let analyze_reentrancy_results ?(min_value=0.) input =
   let result = RE.analyze_file ~min_value input in
   List.iter ~f:(print_json ~to_json:RE.to_json) result
 
-let analyze_unhandled_exception_results ?(min_balance=0.) ?(min_value=0.) input =
+let analyze_unhandled_exception_results
+    ?(historical_balance=false) ?(min_balance=0.) ?(min_value=0.) input =
   let module UE = ResultsAnalyzer.UnhandledException in
-  let result = Lwt_main.run (UE.analyze_file ~min_balance ~min_value input) in
+  let result = Lwt_main.run (UE.analyze_file ~historical_balance ~min_balance ~min_value input) in
   List.iter ~f:(print_json ~to_json:UE.to_json) result

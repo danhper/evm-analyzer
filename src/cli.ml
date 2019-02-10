@@ -56,9 +56,10 @@ let analyze_unhandled_exception_command =
   [%map_open
     let file = anon ("file" %: string)
     and min_value = flag "min-value" (optional float) ~doc:"minimum exploit value"
-    and min_balance = flag "min-balance" (optional float) ~doc:"minimum account balance" in
+    and min_balance = flag "min-balance" (optional float) ~doc:"minimum account balance"
+    and historical_balance = flag "historical-balance" no_arg ~doc:"use historical balance" in
     fun () ->
-      Commands.analyze_unhandled_exception_results ?min_value ?min_balance file
+      Commands.analyze_unhandled_exception_results ~historical_balance ?min_value ?min_balance file
   ]
 
 

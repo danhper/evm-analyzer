@@ -67,5 +67,19 @@ module T = struct
   let sexp_of_t t = Sexp.of_string (to_hex t)
 end
 
+let typ_of =
+  let open Rpc.Types in
+  let of_rpc rpc_value = match rpc_value with
+  | Rpc.Int i -> Ok (of_int64 i)
+  | Rpc.Int32 i -> Ok (of_int32 i)
+  | Rpc.String v -> Ok (of_string v)
+  | _ -> Error (`Msg (Printf.sprintf "expected bigint, got %s" (Rpc.to_string rpc_value)))
+  in
+  Abstract {
+    aname = "big_int";
+    test_data = [zero; one];
+    rpc_of = (fun v -> Rpc.String (to_hex v));
+    of_rpc;
+  }
 
 include Comparator.Make(T)

@@ -19,6 +19,7 @@ depends: [
   "caqti-lwt"               {>= "1.0"   & < "2.0"}
   "rpclib-lwt"              {>= "5.9"   & < "6.0"}
   "cohttp-lwt-unix"         {>= "1.2"   & < "2.0"}
+  "ppx_deriving_rpc"        {>= "5.9"   & < "6.0"}
 
   "monads"   (* https://github.com/danhper/ocaml-monads.git#master *)
   "datalog"  (* https://github.com/c-cube/datalog.git#master *)

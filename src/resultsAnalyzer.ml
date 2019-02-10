@@ -5,7 +5,11 @@ module Util = struct
   let get_results json = Yojson.Safe.Util.(json |> member "result" |> to_assoc)
   let get_concat_results ~f json =
     let results = get_results json in
-    let get_list_value = Fn.compose Yojson.Safe.Util.to_list snd in
+    let get_list_value (tx_hash, values) =
+      let module U = Yojson.Safe.Util in
+      let f value = `Assoc (("tx_hash", `String tx_hash) :: U.to_assoc value) in
+      List.map ~f (U.to_list values)
+    in
     List.map ~f (List.bind ~f:get_list_value results)
 end
 
@@ -55,7 +59,13 @@ end
 
 module UnhandledException = struct
   module FailedCall = struct
-    type t = { to_: String.t; op: String.t; ether: Float.t Option.t; overflow: Bool.t }
+    type t = {
+      to_: String.t;
+      op: String.t;
+      ether: Float.t Option.t;
+      overflow: Bool.t;
+      tx_hash: String.t;
+    }
 
     let to_string t =
       let ether = if t.overflow
@@ -65,7 +75,8 @@ module UnhandledException = struct
 
     let to_json t =
       let ether = Option.value_map ~default:`Null ~f:(fun v -> `Float v) t.ether in
-      `Assoc [("to", `String t.to_);
+      `Assoc [("tx_hash", `String t.tx_hash);
+              ("to", `String t.to_);
               ("op", `String t.op);
               ("ether", ether);
               ("overflow", `Bool t.overflow);]
@@ -74,6 +85,7 @@ module UnhandledException = struct
       let open Yojson.Safe.Util in
       let op = json |> member "op" |> to_string in
       let stack = json |> member "stack" |> to_list in
+      let tx_hash = json |> member "tx_hash" |> to_string in
       let contract_length = 40 in
       match List.rev stack with
       | `String _gas :: `String raw_to :: `String value_str :: _ ->
@@ -81,9 +93,9 @@ module UnhandledException = struct
           let to_ = String.sub ~pos:(String.length raw_to - contract_length) ~len:contract_length raw_to in
           let eth_value = EthUtil.eth_of_wei value in
           if eth_value > Float.of_int (Int.pow 10 6)
-            then { to_; op; ether = None; overflow = true }
-            else { to_; op; ether = Some eth_value; overflow = false }
-      | _ -> { to_ = "NA"; op; ether = None; overflow = false }
+            then { to_; op; ether = None; overflow = true; tx_hash; }
+            else { to_; op; ether = Some eth_value; overflow = false; tx_hash; }
+      | _ -> { to_ = "NA"; op; ether = None; overflow = false; tx_hash; }
   end
 
   type t = {
@@ -101,8 +113,27 @@ module UnhandledException = struct
   let is_call failed_call =
     failed_call.FailedCall.op |> Op.of_string |> Option.value_map ~default:false ~f:Op.is_call
 
-  let analyze ?(min_value=0.) ~rpc contract =
+  let get_call_block rpc calls =
     let open PgMonad.LwtMonad.Let_syntax in
+    let module Tx = EthTypes.Transaction in
+    let call = List.last_exn calls in
+    let tx_hash = call.FailedCall.tx_hash in
+    let%map tx = EthRpc.Eth.get_transaction rpc tx_hash in
+    Option.value_map ~default:`Latest ~f:(fun v -> `Block v.Tx.block_number) tx
+
+
+  let with_balance ~rpc address failed_calls historical =
+    let open PgMonad.LwtMonad.Let_syntax in
+    let%bind tag =
+      if historical
+        then get_call_block rpc failed_calls
+        else Lwt.return `Latest
+    in
+    let%map balance = EthRpc.Eth.get_balance ~tag rpc address in
+    { address; failed_calls; balance = EthUtil.eth_of_wei balance; }
+
+
+  let analyze ?(historical_balance=false) ?(min_value=0.) ~rpc contract =
     let address = Util.get_address contract in
     let concatted = Util.get_concat_results ~f:FailedCall.of_json contract in
     let filter = is_call in
@@ -115,17 +146,15 @@ module UnhandledException = struct
     let filter = if min_value > 0. then (fun v -> filter v && fulfills_value v) else filter in
     let failed_calls = List.filter ~f:filter concatted in
     if List.length failed_calls > 0
-      then
-        let%map balance = EthRpc.Eth.get_balance rpc address in
-        { address; failed_calls; balance = EthUtil.eth_of_wei balance; }
+      then with_balance ~rpc address failed_calls historical_balance
       else Lwt.return { address; failed_calls; balance = 0.; }
 
-
-  let analyze_file ?(min_balance=0.) ?(min_value=0.) file =
+  let analyze_file ?(historical_balance=false) ?(min_balance=0.) ?(min_value=0.) file =
     let open PgMonad.LwtMonad.Let_syntax in
     let rpc = EthRpc.new_client (Sys.getenv_exn "ETH_URL") in
     let contracts = List.map ~f:Yojson.Safe.from_string (In_channel.read_lines file) in
-    let%map results = PgMonad.LwtMonad.all (List.map ~f:(analyze ~min_value ~rpc) contracts) in
+    let promises = List.map ~f:(analyze ~historical_balance ~min_value ~rpc) contracts in
+    let%map results = PgMonad.LwtMonad.all promises in
     List.filter ~f:(fun t -> not (List.is_empty t.failed_calls) && t.balance > min_balance) results
 
   let to_string t =

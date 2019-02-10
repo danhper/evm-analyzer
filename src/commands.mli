@@ -8,4 +8,6 @@ val analyze_vulnerabilities: output:String.t -> addresses:String.t List.t -> Str
 
 val analyze_reentrancy_results: ?min_value:Float.t -> String.t -> unit
 
-val analyze_unhandled_exception_results: ?min_balance:Float.t -> ?min_value:Float.t -> String.t -> unit
+val analyze_unhandled_exception_results:
+  ?historical_balance:Bool.t -> ?min_balance:Float.t
+    -> ?min_value:Float.t -> String.t -> unit
