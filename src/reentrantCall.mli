@@ -11,15 +11,4 @@ type t = {
 
 val aggregate_calls: FactDb.t -> t List.t
 val to_json: t -> Yojson.Safe.t
-
-
-module ContractResult: sig
-  type t = {
-    address: String.t;
-    reentrant_calls: (String.t * Float.t) List.t;
-  }
-
-  val to_string: t -> String.t
-  val analyze_file: ?min_value:Float.t -> String.t -> t List.t
-  val analyze: ?min_value:Float.t -> Yojson.Safe.t -> t
-end
+val of_json: Yojson.Safe.t -> t

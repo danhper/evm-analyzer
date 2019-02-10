@@ -37,8 +37,15 @@ let analyze_vulnerabilities ~output ~addresses vulnerability =
   let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output ?addresses vulnerability in
   PgMonad.full_run result
 
+let print_json ~to_json value =
+  value |> to_json |> Yojson.Safe.to_string |> print_endline
 
 let analyze_reentrancy_results ?(min_value=0.) input =
-  let module CR = ReentrantCall.ContractResult in
-  let result = CR.analyze_file ~min_value input in
-  List.iter ~f:(Fn.compose print_endline CR.to_string) result
+  let module RE = ResultsAnalyzer.Reentrancy in
+  let result = RE.analyze_file ~min_value input in
+  List.iter ~f:(print_json ~to_json:RE.to_json) result
+
+let analyze_unhandled_exception_results ?(min_balance=0.) ?(min_value=0.) input =
+  let module UE = ResultsAnalyzer.UnhandledException in
+  let result = Lwt_main.run (UE.analyze_file ~min_balance ~min_value input) in
+  List.iter ~f:(print_json ~to_json:UE.to_json) result

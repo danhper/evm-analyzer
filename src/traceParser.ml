@@ -33,7 +33,7 @@ let parse_json struct_logs =
         op_string ^ " " ^ (Option.value_exn arg)
       else op_string
     in
-    Op.of_string full_op
+    Op.of_string_exn full_op
   in
 
   let index = ref ~-1 in
@@ -50,7 +50,7 @@ let parse_json struct_logs =
     index := !index + 1;
     let op = get_op trace rest in
     let (children, rest) =
-      if Op.has_children op
+      if Op.is_call op
         then make_call trace rest
         else ([], rest)
     in

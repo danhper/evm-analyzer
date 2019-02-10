@@ -49,9 +49,23 @@ let analyze_reentrancy_results_command =
       Commands.analyze_reentrancy_results ?min_value file
   ]
 
+let analyze_unhandled_exception_command =
+  let open Command.Let_syntax in
+  Command.basic
+  ~summary:"Analyze unhandled exception results"
+  [%map_open
+    let file = anon ("file" %: string)
+    and min_value = flag "min-value" (optional float) ~doc:"minimum exploit value"
+    and min_balance = flag "min-balance" (optional float) ~doc:"minimum account balance" in
+    fun () ->
+      Commands.analyze_unhandled_exception_results ?min_value ?min_balance file
+  ]
+
+
 let analyze_results_command =
   Command.group ~summary:"Analyze results" [
-    ("reentrancy", analyze_reentrancy_results_command)
+    ("reentrancy", analyze_reentrancy_results_command);
+    ("unhandled-exception", analyze_unhandled_exception_command);
   ]
 
 

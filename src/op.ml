@@ -95,7 +95,8 @@ type t =
   | Unknown of String.t      (* unknown opcodes *)
   [@@deriving show { with_path = false }]
 
-let of_string string =
+
+let of_string_exn string =
   let get_length ~opcode string =
     let length = String.drop_prefix string (String.length opcode) in
     Int.of_string length
@@ -195,6 +196,13 @@ let of_string string =
     Swap (get_length ~opcode:"SWAP" v)
   | v -> Unknown v
 
+let of_string string =
+  try
+    Some (of_string_exn string)
+  with
+    _ -> None
+
+
 let size op = match op with
   | Push (n, _) -> n + 1
   | _ -> 1
@@ -236,7 +244,7 @@ let has_result t = match t with
   | Log0 | Log1 | Log2 | Log3 | Log4 | Return | Revert | Selfdestruct -> false
   | _ -> true
 
-let has_children t = match t with
+let is_call t = match t with
   | Call | Staticcall | Delegatecall | Create | Create2 | Callcode -> true
   | _ -> false
 

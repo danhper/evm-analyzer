@@ -71,38 +71,3 @@ let of_json json =
     bob_calls = json |> member "alice_calls" |> to_int;
     alice_calls = json |> member "bob_calls" |> to_int;
   }
-
-module ContractResult = struct
-  type t = [%import: ReentrantCall.ContractResult.t]
-
-  let analyze ?(min_value=0.) contract =
-    let (%) f g = Fn.compose f g in
-    let open Yojson.Safe.Util in
-    let address = contract |> member "address" |> to_string in
-    let results = contract |> member "result" |> to_assoc in
-    let concatted = List.map ~f:of_json (List.bind ~f:(to_list % snd) results) in
-    let process_call acc call =
-      let make_update address amount =
-        let current_value = Option.value ~default:0. (Map.find acc address) in
-        Map.set acc ~key:address ~data:(current_value +. EthUtil.eth_of_wei amount)
-      in
-      if call.alice = address
-        then make_update call.bob BigInt.(call.bob_amount - call.alice_amount)
-      else if call.bob = address
-        then make_update call.alice BigInt.(call.alice_amount - call.bob_amount)
-      else acc
-    in
-    let res = List.fold ~init:(Map.empty (module String)) ~f:process_call concatted in
-    let reentrant_calls = res |> Map.to_alist |> List.filter ~f:(fun (_, v) -> Float.abs v >= min_value) in
-    { address = address; reentrant_calls; }
-
-  let analyze_file ?(min_value=0.) file =
-    let contracts = List.map ~f:Yojson.Safe.from_string (In_channel.read_lines file) in
-    List.map ~f:(analyze ~min_value) contracts
-    |> List.filter ~f:(fun t -> not (List.is_empty t.reentrant_calls))
-
-  let to_string t =
-    let f (contract, value) = Printf.sprintf "\t%s: %5f" contract value in
-    let reentrants = List.map ~f t.reentrant_calls in
-    Printf.sprintf "%s\n%s\n" t.address (String.concat ~sep:"\n" reentrants)
-end
