@@ -52,4 +52,4 @@ empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).
 
 % tx_sstore(B, T, I).
 % tx_sload(B, T, I).
-tod(B, T, T2) :- tx_sstore(B, T, I), tx_sload(B, T2, I), T != T2.
+tod(B, T, T2, I) :- tx_sstore(B, T, I), tx_sload(B, T2, I), T != T2.

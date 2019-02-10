@@ -67,5 +67,5 @@ module Relations: sig
   val call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
   val tx_sstore: (Int.t, String.t, BigInt.t) CI.Rel3.t
   val tx_sload: (Int.t, String.t, BigInt.t) CI.Rel3.t
-  val tod: (Int.t, String.t, String.t) CI.Rel3.t
+  val tod: (Int.t, String.t, String.t, BigInt.t) Rel4.t
 end
