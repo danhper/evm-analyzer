@@ -2,6 +2,8 @@ open Core
 
 include module type of Z
 
+val two: t
+
 val pp: Format.formatter -> t -> unit
 
 val of_hex: String.t -> t

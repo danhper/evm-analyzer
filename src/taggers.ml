@@ -52,15 +52,40 @@ let tag_used_in_condition db { trace; args; _ } =
 
 let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; args; _ } =
   let open StackValue in
+  let max_value = BigInt.(pow two 256 - one) in
+  let is_gas id = FactDb.get_bool db (Printf.sprintf "is_gas(%d)" id) in
+  let negated_zero id = FactDb.get_bool db (Printf.sprintf "negated_zero(%d)" id) in
+  let should_do_check result a b =
+    should_check result.id
+      && not (is_gas a.id || is_gas b.id) (* gas related computation are inserted by the compiler *)
+      && not (negated_zero a.id || negated_zero b.id) (* compiler inserts ADD (NOT 0x0) for some reason *)
+  in
   match trace.Trace.op, args with
+  | Op.Add, (a :: b :: _)
+      when a.value = max_value && b.value = BigInt.of_int 256 -> ()
   | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b]
-      when should_check result.id ->
+      when should_do_check result a b ->
     let output_bits = Option.value ~default:256 (get_size result.id) in
     let actual_result = Op.execute_binary_op op a.value b.value in
     let expected_result = cast_value actual_result output_bits in
     if expected_result <> actual_result then
       FactDb.add_int_rel1 db name result.id
   | _ -> ()
+
+let tag_const_zero' db result { trace; _ } =
+  match trace.op with
+  | Op.Push _ when result.StackValue.value = BigInt.zero ->
+    FactDb.add_int_rel1 db "push_zero" result.StackValue.id
+  | _ -> ()
+let tag_const_zero = with_result tag_const_zero'
+
+
+let tag_not' db result { trace; _ } =
+  match trace.op with
+  | Op.Not -> FactDb.add_int_rel1 db "not" result.StackValue.id
+  | _ -> ()
+let tag_not = with_result tag_not'
+
 
 let tag_signed_overflow' db result full_trace =
   let should_check id = FactDb.get_bool db (Printf.sprintf "is_signed(%d)" id) in
@@ -119,6 +144,12 @@ let tag_tx_sload db { trace; env; args; _ } =
     FactDb.add_rel3 db FactDb.Relations.tx_sload db_args
   | _ -> ()
 
+let tag_gas' db result { trace; _ } =
+  match trace.op with
+  | Op.Gas -> FactDb.add_int_rel1 db "is_gas" result.StackValue.id
+  | _ -> ()
+let tag_gas = with_result tag_gas'
+
 
 let all = [
   [tag_output;
@@ -130,6 +161,8 @@ let all = [
    tag_failed_call;
    tag_empty_delegate_call;
    tag_call;
+   tag_const_zero;
+   tag_not;
   ];
 
   [tag_signed_overflow;
@@ -139,7 +172,8 @@ let all = [
 
 let for_vulnerability vulnerability_type = match vulnerability_type with
   | "integer-overflow" ->
-    [[tag_output; tag_uint_size; tag_int_size; tag_signed];
+    [[tag_output; tag_uint_size; tag_int_size; tag_signed;
+      tag_gas; tag_const_zero; tag_not];
      [tag_signed_overflow; tag_unsigned_overflow]]
   | "unhandled-exception" ->
     [[tag_failed_call; tag_used_in_condition;]]
