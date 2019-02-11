@@ -59,6 +59,7 @@ let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; ar
     should_check result.id
       && not (is_gas a.id || is_gas b.id) (* gas related computation are inserted by the compiler *)
       && not (negated_const a.id || negated_const b.id) (* compiler inserts ADD (NOT CONST) *)
+      (* TODO: check for sload/mload *)
   in
   match trace.Trace.op, args with
   | Op.Add, (a :: b :: _)
