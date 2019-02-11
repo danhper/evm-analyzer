@@ -139,7 +139,7 @@ module UnhandledException = struct
     let filter = is_call in
     let fulfills_value call =
       match call.FailedCall.ether with
-      | None -> true
+      | None -> false
       | Some v when v > min_value -> true
       | _ -> false
       in
