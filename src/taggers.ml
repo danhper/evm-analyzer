@@ -54,11 +54,11 @@ let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; ar
   let open StackValue in
   let max_value = BigInt.(pow two 256 - one) in
   let is_gas id = FactDb.get_bool db (Printf.sprintf "is_gas(%d)" id) in
-  let negated_zero id = FactDb.get_bool db (Printf.sprintf "negated_zero(%d)" id) in
+  let negated_const id = FactDb.get_bool db (Printf.sprintf "negated_const(%d)" id) in
   let should_do_check result a b =
     should_check result.id
       && not (is_gas a.id || is_gas b.id) (* gas related computation are inserted by the compiler *)
-      && not (negated_zero a.id || negated_zero b.id) (* compiler inserts ADD (NOT 0x0) for some reason *)
+      && not (negated_const a.id || negated_const b.id) (* compiler inserts ADD (NOT CONST) *)
   in
   match trace.Trace.op, args with
   | Op.Add, (a :: b :: _)
@@ -72,12 +72,12 @@ let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; ar
       FactDb.add_int_rel1 db name result.id
   | _ -> ()
 
-let tag_const_zero' db result { trace; _ } =
+let tag_const' db result { trace; _ } =
   match trace.op with
-  | Op.Push _ when result.StackValue.value = BigInt.zero ->
-    FactDb.add_int_rel1 db "push_zero" result.StackValue.id
+  | Op.Push _ ->
+    FactDb.add_int_rel1 db "const" result.StackValue.id
   | _ -> ()
-let tag_const_zero = with_result tag_const_zero'
+let tag_const = with_result tag_const'
 
 
 let tag_not' db result { trace; _ } =
@@ -161,7 +161,7 @@ let all = [
    tag_failed_call;
    tag_empty_delegate_call;
    tag_call;
-   tag_const_zero;
+   tag_const;
    tag_not;
   ];
 
@@ -173,7 +173,7 @@ let all = [
 let for_vulnerability vulnerability_type = match vulnerability_type with
   | "integer-overflow" ->
     [[tag_output; tag_uint_size; tag_int_size; tag_signed;
-      tag_gas; tag_const_zero; tag_not];
+      tag_gas; tag_const; tag_not];
      [tag_signed_overflow; tag_unsigned_overflow]]
   | "unhandled-exception" ->
     [[tag_failed_call; tag_used_in_condition;]]

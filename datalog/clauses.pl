@@ -30,7 +30,7 @@ modified_by_overflow(A) :- is_overflow(B), depends(A, B).
 influences_condition(A) :- used_in_condition(A).
 influences_condition(A) :- depends(B, A), used_in_condition(B).
 
-negated_zero(B) :- is_output(B, A), push_zero(A), not(B).
+negated_const(B) :- is_output(B, A), const(A), not(B).
 
 path_modified_by_overflow(A) :- modified_by_overflow(A), used_in_condition(A).
 
