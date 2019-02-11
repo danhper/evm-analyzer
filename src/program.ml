@@ -74,10 +74,18 @@ let of_json ?(filename=None) json_string =
   let open Yojson.Safe.Util in
   let json = json_string |> Yojson.Safe.from_string in
   let contracts_json = member "contracts" json in
+  let source_list = match member "sourceList" json with
+  | `List source_list -> Some (List.map ~f:to_string source_list)
+  | _ -> None
+  in
   let get_sources contract_json filename =
-    let raw_metadata = contract_json |> member "metadata" |> to_string_option in
-    let metadata = Option.value_exn ~message:"metadata not available" raw_metadata in
-    let relative_paths = metadata |> Yojson.Safe.from_string |> member "sources" |> keys in
+    let relative_paths =
+      match member "metadata" contract_json, source_list with
+      | `String raw_metadata, _ ->
+        raw_metadata |> Yojson.Safe.from_string |> member "sources" |> keys
+      | _, Some source_list -> source_list
+      | _ -> failwith "metadata and sourceList not available"
+    in
     let directory = Filename.dirname filename in
     let f relative_path =
       let source_path = Filename.concat directory relative_path in
