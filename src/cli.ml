@@ -39,10 +39,11 @@ let analyze_vulnerabilities_command =
     let vulnerability = anon ("vulnerability" %: string)
     and addresses = flag "addresses" (listed string) ~doc:"addresses to analize"
     and output = flag "output" (required string) ~doc:"path output"
-    and debug = flag "debug" no_arg ~doc:"debug mode" in
+    and debug = flag "debug" no_arg ~doc:"debug mode"
+    and timeout = flag "timeout" (optional float) ~doc:"analysis timeout" in
     fun () ->
       process_debug_flag debug;
-      Commands.analyze_vulnerabilities ~output ~addresses vulnerability
+      Commands.analyze_vulnerabilities ?timeout ~output ~addresses vulnerability
   ]
 
 let analyze_reentrancy_results_command =

@@ -29,12 +29,12 @@ let analyze_traces ~debug ~contract_address filepath query =
       List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces
 
 
-let analyze_vulnerabilities ~output ~addresses vulnerability =
+let analyze_vulnerabilities ?timeout ~output ~addresses vulnerability =
   let addresses = match addresses with
   | [] -> None
   | list -> Some list
   in
-  let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output ?addresses vulnerability in
+  let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output ?timeout ?addresses vulnerability in
   PgMonad.full_run result
 
 let print_json ~to_json value =

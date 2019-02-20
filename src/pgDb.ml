@@ -15,8 +15,6 @@ let transactions_query =
      FROM transactions t
      WHERE t.to = ?
         AND trace IS NOT NULL
-        AND jsonb_typeof (trace->'structLogs') = 'array'
-        AND (trace->'failed')::boolean <> true
      LIMIT ?
      OFFSET ?"
 
