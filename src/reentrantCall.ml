@@ -33,15 +33,15 @@ let aggregate_calls db =
                alice_calls = alice_calls + record.alice_calls;
                bob_amount = BigInt.add bob_amount record.bob_amount;
                bob_calls = bob_calls + record.bob_calls; }
-
     in
-    if Set.mem reentrants key
-      then Map.update acc key ~f:make_update
-      else acc
+    Map.update acc key ~f:make_update
   in
-  FactDb.query4 db FactDb.Relations.call
-  |> List.fold ~init:empty_map ~f
-  |> Map.data
+  if Set.is_empty reentrants
+    then []
+    else
+      FactDb.query4 db FactDb.Relations.call
+      |> List.fold ~init:empty_map ~f
+      |> Map.data
 
 
 let ether_diff t = EthUtil.eth_of_wei BigInt.(abs (t.bob_amount - t.alice_amount))
