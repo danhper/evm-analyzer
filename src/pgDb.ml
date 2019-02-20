@@ -27,7 +27,7 @@ let indirect_transactions_query =
      FROM transactions t
      WHERE t.to = $1
         AND t.trace IS NOT NULL
-    UNION
+    UNION ALL
     SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
      FROM transactions t
      JOIN traces tr
@@ -47,7 +47,7 @@ let vulnerable_contracts_query =
 let get_vulnerable_contracts { db = (module Db: Caqti_lwt.CONNECTION); _ } vulnerability =
   Db.collect_list vulnerable_contracts_query vulnerability
 
-let get_contract_transactions ?(include_indirect=false) ?(limit=30) ?(offset=0)
+let get_contract_transactions ?(include_indirect=false) ?(limit=10) ?(offset=0)
     { db = (module Db: Caqti_lwt.CONNECTION); _ } address =
   let query = if include_indirect then indirect_transactions_query else transactions_query in
   Db.collect_list query (address, limit, offset)
