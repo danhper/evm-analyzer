@@ -26,7 +26,7 @@ let indirect_transactions_query =
                        FROM transactions t
                        WHERE t.to = $1
                          AND t.trace IS NOT NULL
-                       UNION
+                       UNION ALL
                        SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
                        FROM transactions t
                               JOIN traces tr
