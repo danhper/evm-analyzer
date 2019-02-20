@@ -21,17 +21,19 @@ let transactions_query =
 let indirect_transactions_query =
   Caqti_request.collect
     Caqti_type.(tup3 string int int) Caqti_type.(tup4 string string string int)
-    "SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
-     FROM transactions t
-     WHERE t.to = $1
-        AND t.trace IS NOT NULL
-    UNION ALL
-    SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
-     FROM transactions t
-     JOIN traces tr
-     ON tr.hash = t.hash
-     WHERE (tr.to = $1 OR tr.from = $1)
-        AND trace IS NOT NULL
+    "SELECT DISTINCT x.hash, x.trace, x.to, x.\"blockNumber\" FROM (
+                       SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
+                       FROM transactions t
+                       WHERE t.to = $1
+                         AND t.trace IS NOT NULL
+                       UNION
+                       SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
+                       FROM transactions t
+                              JOIN traces tr
+                                   ON tr.hash = t.hash
+                       WHERE (tr.to = $1 OR tr.from = $1)
+                         AND trace IS NOT NULL
+                     ) x
      LIMIT $2
      OFFSET $3"
 
