@@ -1,5 +1,9 @@
 open Core
 
+let process_debug_flag debug =
+  if debug then
+    Logs.set_level (Some Logs.Debug)
+
 let opcodes_command =
   let open Command.Let_syntax in
   Command.basic
@@ -23,6 +27,7 @@ let analyze_traces_command =
     and contract_address = flag "contract-address" (optional string) ~doc:"contract address (for reentrancy)"
     and debug = flag "debug" no_arg ~doc:"debug mode" in
     fun () ->
+      process_debug_flag debug;
       Commands.analyze_traces ~debug ~contract_address input_file query
   ]
 
@@ -33,8 +38,10 @@ let analyze_vulnerabilities_command =
   [%map_open
     let vulnerability = anon ("vulnerability" %: string)
     and addresses = flag "addresses" (listed string) ~doc:"addresses to analize"
-    and output = flag "output" (required string) ~doc:"path output" in
+    and output = flag "output" (required string) ~doc:"path output"
+    and debug = flag "debug" no_arg ~doc:"debug mode" in
     fun () ->
+      process_debug_flag debug;
       Commands.analyze_vulnerabilities ~output ~addresses vulnerability
   ]
 

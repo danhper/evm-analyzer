@@ -2,6 +2,9 @@ open Core
 
 module CI = Datalog_caml_interface
 
+let num_facts db = CI.Logic.DB.num_facts db
+let num_clauses db = CI.Logic.DB.num_clauses db
+
 module Rel4 = struct
   type ('a,'b,'c,'d) t = [%import: FactDb.Rel4.t]
 

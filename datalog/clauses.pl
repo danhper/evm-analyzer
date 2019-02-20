@@ -16,7 +16,7 @@
 % int_size(A, N) - A has an inferred int_size of N
 
 depends(A, B) :- is_output(A, B).
-depends(A, B) :- depends(A, B), is_output(B, C).
+depends(A, B) :- is_output(A, C), depends(C, B).
 
 depends_on_storage(A) :- uses_storage(A).
 depends_on_storage(A) :- uses_storage(B), depends(A, B).
@@ -47,7 +47,7 @@ uint_size(A, N) :- depends(A, B), has_uint_size(B, N).
 unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
 
 call(I, A, B, V) :- direct_call(I, A, B, V).
-call(I, A, B, V) :- call(I2, A, C, V), direct_call(I, C, B, V2).
+call(I, A, B, V) :- direct_call(I, A, C, V), call(I2, C, B, V2).
 reentrant_call(I, A, B, V, V2) :- call(I, A, B, V), call(I2, B, A, V2), A != B.
 
 empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).

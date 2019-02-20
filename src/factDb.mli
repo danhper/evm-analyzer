@@ -5,6 +5,7 @@ module CI = Datalog_caml_interface
 
 type t = CI.Logic.DB.t
 
+
 module Rel4: sig
   type ('a,'b,'c,'d) t = CI.const * 'a CI.Univ.key * 'b CI.Univ.key * 'c CI.Univ.key * 'd CI.Univ.key
   val create: ?k1:'a CI.Univ.key -> ?k2:'b CI.Univ.key -> ?k3:'c CI.Univ.key
@@ -24,6 +25,9 @@ module Types: sig
   val int: Int.t CI.Univ.key
   val string: String.t CI.Univ.key
 end
+
+val num_clauses: t -> int
+val num_facts: t -> int
 
 val create: unit -> t
 

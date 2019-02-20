@@ -27,8 +27,6 @@ let indirect_transactions_query =
      FROM transactions t
      WHERE t.to = $1
         AND t.trace IS NOT NULL
-        AND jsonb_typeof (t.trace->'structLogs') = 'array'
-        AND (t.trace->'failed')::boolean <> true
     UNION
     SELECT t.hash, t.trace, t.to, t.\"blockNumber\"
      FROM transactions t
@@ -36,8 +34,6 @@ let indirect_transactions_query =
      ON tr.hash = t.hash
      WHERE (tr.to = $1 OR tr.from = $1)
         AND trace IS NOT NULL
-        AND jsonb_typeof (t.trace->'structLogs') = 'array'
-        AND (t.trace->'failed')::boolean <> true
      LIMIT $2
      OFFSET $3"
 
