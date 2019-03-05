@@ -1,7 +1,7 @@
 open Core
 
 module JumpType = struct
-  type t = [%import: Sourcemap.JumpType.t]
+  type t = In | Out | Regular
 
   let of_string string = match string with
     | "-" -> Regular
@@ -11,10 +11,15 @@ module JumpType = struct
 end
 
 module Mapping = struct
-  type t = [%import: Sourcemap.Mapping.t]
+  type t = {
+    start: Int.t;
+    length: Int.t;
+    source_index: Int.t;
+    jump: JumpType.t;
+  }
 end
 
-type t = [%import: Sourcemap.t]
+type t = Mapping.t List.t
 
 let of_list mappings =
   let f acc elem =

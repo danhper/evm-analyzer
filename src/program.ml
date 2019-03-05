@@ -1,7 +1,13 @@
 open Core
 
 module Contract = struct
-  type t = [%import: Program.Contract.t]
+  type t = {
+    name: String.t;
+    bytecode: String.t;
+    ops: Op.t List.t;
+    sources: (String.t * String.t) List.t Option.t;
+    sourcemap: Sourcemap.t Option.t;
+  }
 
   let get_position offset ranges =
     let rec search left right =
@@ -60,7 +66,10 @@ module Contract = struct
     String.concat ~sep:"\n" formatted_opcodes ^ "\n"
 end
 
-type t = [%import: Program.t]
+type t = {
+  contracts: Contract.t List.t;
+  filename: String.t Option.t;
+}
 
 let format_ops ?contract:(contract_name=None) ?(show_pc=false) ?(show_sourcemap=false) t =
   let contract = match contract_name with

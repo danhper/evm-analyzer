@@ -12,7 +12,12 @@ module StackValue = struct
 end
 
 module Env = struct
-  type t = [%import: TracerTypes.Env.t]
+  type t = {
+    stack: StackValue.t EStack.t;
+    block_number: Int.t;
+    tx_hash: String.t;
+    address: BigInt.t;
+  }
 
   let create ~block_number ~tx_hash address = {
     stack = EStack.create ~copy:StackValue.copy ();
@@ -23,9 +28,14 @@ module Env = struct
 end
 
 module FullTrace = struct
-  type t = [%import: TracerTypes.FullTrace.t]
+  type t = {
+    trace: Trace.t;
+    args: StackValue.t List.t;
+    result: StackValue.t Option.t;
+    env: Env.t;
+  }
 end
 
 module Tagger = struct
-  type t = [%import: TracerTypes.Tagger.t]
+  type t = FactDb.t -> FullTrace.t -> unit
 end

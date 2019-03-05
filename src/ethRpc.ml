@@ -3,7 +3,7 @@ open Core
 module LwtMonad = PgMonad.LwtMonad
 
 type t = Rpc.call -> Rpc.response Lwt.t
-type tag = [%import: EthRpc.tag]
+type tag = [`Block of Int.t | `Latest | `Earliest | `Pending]
 
 
 let new_client url =

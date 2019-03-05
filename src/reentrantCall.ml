@@ -1,7 +1,15 @@
 open! Core
 
 
-type t = [%import: ReentrantCall.t]
+type t = {
+  alice: String.t;
+  bob: String.t;
+  alice_amount: BigInt.t;
+  bob_amount: BigInt.t;
+  alice_calls: Int.t;
+  bob_calls: Int.t;
+}
+
 
 let bigint_tuple_comparator = Tuple2.comparator BigInt.comparator BigInt.comparator
 

@@ -6,7 +6,7 @@ let num_facts db = CI.Logic.DB.num_facts db
 let num_clauses db = CI.Logic.DB.num_clauses db
 
 module Rel4 = struct
-  type ('a,'b,'c,'d) t = [%import: FactDb.Rel4.t]
+  type ('a,'b,'c,'d) t = CI.const * 'a CI.Univ.key * 'b CI.Univ.key * 'c CI.Univ.key * 'd CI.Univ.key
 
   let create ?(k1=CI.Univ.new_key ()) ?(k2=CI.Univ.new_key ())
     ?(k3=CI.Univ.new_key ()) ?(k4=CI.Univ.new_key ()) name = (CI.of_string name, k1, k2, k3, k4)
@@ -49,7 +49,7 @@ module Rel4 = struct
 end
 
 module Rel5 = struct
-  type ('a,'b,'c,'d,'e) t = [%import: FactDb.Rel5.t]
+  type ('a,'b,'c,'d,'e) t = CI.const * 'a CI.Univ.key * 'b CI.Univ.key * 'c CI.Univ.key * 'd CI.Univ.key * 'e CI.Univ.key
 
   let create ?(k1=CI.Univ.new_key ()) ?(k2=CI.Univ.new_key ())
     ?(k3=CI.Univ.new_key ()) ?(k4=CI.Univ.new_key ())

@@ -9,6 +9,6 @@
              caqti caqti-driver-postgresql caqti-lwt monads
              rpclib-lwt rpclib.json cohttp-lwt-unix)
   (preprocess
-    (staged_pps ppx_import ppx_let ppx_deriving ppx_deriving.show ppx_fields_conv
-     ppx_deriving_rpc))
-  (public_name evm-analyzer))
+    (pps ppx_let ppx_deriving ppx_deriving.show ppx_fields_conv ppx_deriving_rpc))
+  (public_name evm-analyzer)
+  (modules_without_implementation trace))
