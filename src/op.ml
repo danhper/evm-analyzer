@@ -93,7 +93,7 @@ type t =
   | Selfdestruct  (* halt execution and register account for later deletion *)
 
   | Unknown of String.t      (* unknown opcodes *)
-  [@@deriving show { with_path = false }]
+  [@@deriving show { with_path = false }, eq]
 
 
 let of_string_exn string =
