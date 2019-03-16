@@ -57,7 +57,7 @@ module Contract = struct
       let pc_string = if show_pc then Printf.sprintf "%d " pc else "" in
       ((pc_string ^ Op.to_string op) :: result, pc + Op.size op)
     in
-    let string_opcodes = List.fold ~init:([], 1) ~f t.ops |> fst |> List.rev in
+    let string_opcodes = List.fold ~init:([], 0) ~f t.ops |> fst |> List.rev in
     let formatted_opcodes =
       if show_sourcemap
         then append_sourcemaps t string_opcodes
