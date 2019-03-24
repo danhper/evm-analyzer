@@ -212,6 +212,7 @@ let to_string t = match t with
     Printf.sprintf "PUSH%d %s" n (BigInt.to_hex value)
   | Dup n -> Printf.sprintf "DUP%d" n
   | Swap n -> Printf.sprintf "SWAP%d" n
+  | Unknown s -> Printf.sprintf "UNKNOWN %s" s
   | _ -> String.uppercase (show t)
 
 

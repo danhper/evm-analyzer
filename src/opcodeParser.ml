@@ -12,13 +12,20 @@ let consume t ~bytes =
   let len = bytes * 2 in
   if t.index + len > length t then
     let left_bytecode = String.sub t.bytecode ~pos:t.index ~len:(length t - t.index) in
-    failwith (Printf.sprintf "could not get %d bytes from %s" len left_bytecode)
+    Error left_bytecode
+    (* failwith (Printf.sprintf "could not get %d bytes from %s" len left_bytecode) *)
   else
     let bytecode = String.sub t.bytecode ~pos:t.index ~len in
     t.index <- t.index + len;
-    BigInt.of_string_base 16 bytecode
+    Ok (BigInt.of_string_base 16 bytecode)
 
-let consume_opcode t = BigInt.to_int (consume ~bytes:1 t)
+let consume_exn t ~bytes =
+  match consume t ~bytes with
+  | Error left_bytecode ->
+    failwith (Printf.sprintf "could not get %d bytes from %s" (bytes * 2) left_bytecode)
+  | Ok opcode -> opcode
+
+let consume_opcode t = BigInt.to_int (consume_exn ~bytes:1 t)
 
 let consume_full_opcode t =
   let open Op in
@@ -93,7 +100,10 @@ let consume_full_opcode t =
 
   | n when n >= 0x60 && n <= 0x7f ->
     let bytes = (n - 0x60 + 1) in
-    Push (bytes, consume t ~bytes)
+    begin match consume t ~bytes with
+    | Ok value -> Push (bytes, value)
+    | Error err -> Unknown err
+    end
 
   | n when n >= 0x80 && n <= 0x8f -> Dup (n - 0x80 + 1)
 
