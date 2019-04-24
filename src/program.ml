@@ -1,11 +1,19 @@
 open Core
 
 module Contract = struct
+  module Source = struct
+    type t = {
+      filename: String.t;
+      body: String.t;
+      index: Int.t;
+    }
+  end
+
   type t = {
     name: String.t;
     bytecode: String.t;
     ops: Op.t List.t;
-    sources: (String.t * String.t) List.t Option.t;
+    sources: Source.t List.t Option.t;
     sourcemap: Sourcemap.t Option.t;
   }
 
@@ -17,31 +25,49 @@ module Contract = struct
         let value = ranges.(middle) in
         if offset = value then (middle + 1, offset - value)
         else if offset >= value then search middle right
-        else search left (middle - 1)
+        else search left middle
     in
     search 0 (Array.length ranges)
 
   let format_sourcemap t =
+    let open Source in
     let sourcemap = (Option.value_exn ~message:"sourcemap not available" t.sourcemap) in
-
-    let acc_range offset acc elem = if elem = '\n' then offset :: acc else acc in
-    let make_ranges (_filename, source) = Array.of_list_rev (String.foldi ~init:[0] ~f:acc_range source) in
+    let acc_range offset (in_string, escaped, acc) elem =
+      if escaped then (in_string, false, acc)
+      else match in_string, elem with
+      | `None, '\n' -> (`None, false, offset :: acc)
+      | `None, '"' -> (`Double, false, acc)
+      | `Double, '"' -> (`None, false, acc)
+      | `None, '\'' -> (`Single, false, acc)
+      | `Single, '\'' -> (`None, false, acc)
+      | _, '\\' -> (in_string, true, acc)
+      | _ -> (in_string, false, acc)
+    in
+    let make_ranges { body; _ } =
+      let (_, _, ranges) = String.foldi ~init:(`None, false, [0]) ~f:acc_range body in
+      Array.of_list_rev ranges
+    in
     let source_ranges = Option.map ~f:(List.map ~f:make_ranges) t.sources in
 
     let format_mapping mapping =
       let open Sourcemap.Mapping in
-      let idx = mapping.source_index - 1 in
+      let idx = mapping.source_index in
       if idx < 0 then "NA" else
         let stop = mapping.start + mapping.length in
         match source_ranges with
         | None -> Printf.sprintf "%d-%d" mapping.start stop
-        | Some r when idx >= List.length r -> "NA"
         | Some all_ranges ->
-          let prefix = if idx = 0 then "" else fst (List.nth_exn (Option.value_exn t.sources) idx) in
-          let ranges = List.nth_exn all_ranges idx in
-          let (start_line, start_col) = get_position mapping.start ranges in
-          let (stop_line, stop_col) = get_position stop ranges in
-          Printf.sprintf "%s%d:%d-%d:%d" prefix start_line start_col stop_line stop_col
+          let sources = Option.value_exn t.sources in
+          let f _index source = source.index = idx in
+          begin match List.findi sources ~f with
+          | None -> "NA"
+          | Some (index, source) ->
+            let prefix = if List.length sources = 1 then "" else source.body in
+            let ranges = List.nth_exn all_ranges index in
+            let (start_line, start_col) = get_position mapping.start ranges in
+            let (stop_line, stop_col) = get_position stop ranges in
+            Printf.sprintf "%s%d:%d-%d:%d" prefix start_line start_col stop_line stop_col
+          end
     in
     List.map ~f:format_mapping sourcemap
 
@@ -79,9 +105,43 @@ let format_ops ?contract:(contract_name=None) ?(show_pc=false) ?(show_sourcemap=
   Contract.format_ops ~show_pc ~show_sourcemap contract
 
 
-let of_json ?(filename=None) json_string =
+let json_version json =
   let open Yojson.Safe.Util in
-  let json = json_string |> Yojson.Safe.from_string in
+  match member "schemaVersion" json with
+  | `Null -> 1
+  | `String semver -> begin match String.split semver ~on:'.' with
+    | [major; _minor; _patch] -> Int.of_string major
+    | _ -> failwithf "invalid semver: %s" semver ()
+    end
+  | v -> failwithf "unknown value for schemaVersion: %s" (to_string v) ()
+
+
+let of_json_version_2 ?(filename=None) json =
+  let open Yojson.Safe.Util in
+  let open Contract in
+  let bytecode = json |> member "deployedBytecode" |> to_string in
+  let sourcemap = json |> member "deployedSourceMap" |> to_string |> Sourcemap.of_string in
+  let source = json |> member "source" |> to_string in
+  let source_path = json |> member "sourcePath" |> to_string in
+  let ast_sourcemap = json |> member "ast" |> member "src" |> to_string |> Sourcemap.Mapping.of_string in
+  let contract =
+  { name = json |> member "contractName" |> to_string;
+    bytecode;
+    ops = OpcodeParser.parse_bytecode bytecode;
+    sourcemap = Some sourcemap;
+    sources = Some [{
+      Source.filename = source_path;
+      Source.body = source;
+      Source.index = ast_sourcemap.Sourcemap.Mapping.source_index;
+    }];
+  }
+  in
+  { contracts = [contract]; filename; }
+
+
+let of_json_version_1 ?(filename=None) json =
+  let open Contract in
+  let open Yojson.Safe.Util in
   let contracts_json = member "contracts" json in
   let source_list = match member "sourceList" json with
   | `List source_list -> Some (List.map ~f:to_string source_list)
@@ -96,16 +156,17 @@ let of_json ?(filename=None) json_string =
       | _ -> failwith "metadata and sourceList not available"
     in
     let directory = Filename.dirname filename in
-    let f relative_path =
+    let f index relative_path =
       let source_path = Filename.concat directory relative_path in
       match Sys.file_exists source_path with
-      | `Yes -> Some (relative_path, (In_channel.read_all source_path))
+      | `Yes -> Some { Source.filename = relative_path;
+                       Source.body = In_channel.read_all source_path;
+                       Source.index= index; }
       | `Unknown | `No -> None
     in
-    Option.all (List.map ~f relative_paths)
+    Option.all (List.mapi ~f relative_paths)
   in
   let get_contract name =
-    let open Contract in
     let contract_json = member name contracts_json in
     let bytecode = contract_json |> member "bin-runtime" |> to_string in
     let sourcemap = contract_json |> member "srcmap-runtime" |> to_string_option
@@ -118,6 +179,14 @@ let of_json ?(filename=None) json_string =
     }
   in
   { contracts = List.map ~f:get_contract (keys contracts_json); filename; }
+
+
+let of_json ?(filename=None) json_string =
+  let json = json_string |> Yojson.Safe.from_string in
+  match json_version json with
+  | 1 -> of_json_version_1 ~filename json
+  | 2 -> of_json_version_2 ~filename json
+  | n -> failwithf "unsupported schema version %d" n ()
 
 let of_bytecode ?(filename=None) bytecode =
   let open Contract in

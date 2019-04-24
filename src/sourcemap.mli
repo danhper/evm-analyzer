@@ -13,6 +13,8 @@ module Mapping: sig
     source_index: Int.t;
     jump: JumpType.t;
   }
+
+  val of_string: ?current_mappings:t List.t -> String.t -> t
 end
 
 type t = Mapping.t List.t

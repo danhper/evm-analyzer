@@ -1,11 +1,19 @@
 open Core
 
 module Contract: sig
+  module Source: sig
+    type t = {
+      filename: String.t;
+      body: String.t;
+      index: Int.t;
+    }
+  end
+
   type t = {
     name: String.t;
     bytecode: String.t;
     ops: Op.t List.t;
-    sources: (String.t * String.t) List.t Option.t;
+    sources: Source.t List.t Option.t;
     sourcemap: Sourcemap.t Option.t;
   }
 

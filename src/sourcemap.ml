@@ -17,25 +17,27 @@ module Mapping = struct
     source_index: Int.t;
     jump: JumpType.t;
   }
-end
 
-type t = Mapping.t List.t
-
-let of_list mappings =
-  let f acc elem =
-    let open Mapping in
-    let mapping = String.split ~on:':' elem in
-    let get_value ~f ~accessor idx =
+  let of_string ?(current_mappings=[]) string =
+    let mapping = String.split ~on:':' string in
+    let get_value ?default ~f ~accessor idx =
       match List.nth mapping idx with
-      | None | Some "" -> acc |> List.hd_exn |> accessor
+      | None | Some "" ->
+        let result = current_mappings |> List.hd |> Option.map ~f:accessor in
+        Option.value_exn (Option.first_some result default)
       | Some v -> f v
     in
     { start = get_value ~f:Int.of_string ~accessor:(fun v -> v.start) 0;
       length = get_value ~f:Int.of_string ~accessor:(fun v -> v.length) 1;
       source_index = get_value ~f:Int.of_string ~accessor:(fun v -> v.source_index) 2;
-      jump = get_value ~f:JumpType.of_string ~accessor:(fun v -> v.jump) 3;
-    } :: acc
-  in
+      jump = get_value ~default:JumpType.Regular ~f:JumpType.of_string ~accessor:(fun v -> v.jump) 3;
+    }
+end
+
+type t = Mapping.t List.t
+
+let of_list mappings =
+  let f acc elem = (Mapping.of_string ~current_mappings:acc elem) :: acc in
   mappings |> List.fold ~init:[] ~f |> List.rev
 
 
