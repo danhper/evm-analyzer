@@ -98,17 +98,40 @@ module UnhandledException = struct
       | _ -> { to_ = "NA"; op; ether = None; overflow = false; tx_hash; }
   end
 
-  type t = {
-    address: String.t;
-    balance: Float.t;
-    failed_calls: FailedCall.t List.t;
-  }
+  module Contract = struct
+    type t = {
+      address: String.t;
+      balance: Float.t;
+      failed_calls: FailedCall.t List.t;
+    }
+
+  let to_string t =
+    let failed_calls = List.map ~f:FailedCall.to_string t.failed_calls in
+    let balance = Float.to_string_hum t.balance in
+    let failed_calls_str = String.concat ~sep:"\n" failed_calls in
+    Printf.sprintf "%s (%s ETH)\n%s\n" t.address balance failed_calls_str
+
+  let get_total_failed t =
+    let get_failed_ether failed_call = Option.value ~default:0. failed_call.FailedCall.ether in
+    let failed_total = List.sum (module Float) ~f:get_failed_ether t.failed_calls in
+    Float.min t.balance failed_total
 
   let to_json t =
     let failed_calls = List.map ~f:FailedCall.to_json t.failed_calls in
     `Assoc [("address", `String t.address);
             ("balance", `Float t.balance);
+            ("total_failed", `Float (get_total_failed t));
             ("failed_calls", `List failed_calls);]
+  end
+
+  type t = {
+    contracts: Contract.t List.t;
+    total_failed: Float.t;
+  }
+
+  let to_json t =
+    `Assoc [("total_failed", `Float t.total_failed);
+            ("contracts", `List (List.map ~f:Contract.to_json t.contracts))]
 
   let is_call failed_call =
     failed_call.FailedCall.op |> Op.of_string |> Option.value_map ~default:false ~f:Op.is_call
@@ -123,6 +146,7 @@ module UnhandledException = struct
 
 
   let with_balance ~rpc address failed_calls historical =
+    let open Contract in
     let open PgMonad.LwtMonad.Let_syntax in
     let%bind tag =
       if historical
@@ -132,14 +156,16 @@ module UnhandledException = struct
     let%map balance = EthRpc.Eth.get_balance ~tag rpc address in
     { address; failed_calls; balance = EthUtil.eth_of_wei balance; }
 
+  let get_total_failed contracts =
+    List.sum (module Float) ~f:Contract.get_total_failed contracts
 
   let analyze ?(historical_balance=false) ?(min_value=0.) ~rpc contract =
+    let open Contract in
     let address = Util.get_address contract in
     let concatted = Util.get_concat_results ~f:FailedCall.of_json contract in
     let filter = is_call in
     let fulfills_value call =
       match call.FailedCall.ether with
-      | None -> false
       | Some v when v > min_value -> true
       | _ -> false
       in
@@ -155,11 +181,11 @@ module UnhandledException = struct
     let contracts = List.map ~f:Yojson.Safe.from_string (In_channel.read_lines file) in
     let promises = List.map ~f:(analyze ~historical_balance ~min_value ~rpc) contracts in
     let%map results = PgMonad.LwtMonad.all promises in
-    List.filter ~f:(fun t -> not (List.is_empty t.failed_calls) && t.balance > min_balance) results
-
-  let to_string t =
-    let failed_calls = List.map ~f:FailedCall.to_string t.failed_calls in
-    let balance = Float.to_string_hum t.balance in
-    let failed_calls_str = String.concat ~sep:"\n" failed_calls in
-    Printf.sprintf "%s (%s ETH)\n%s\n" t.address balance failed_calls_str
+    let contracts =
+      let open Contract in
+      let f = (fun t -> not (List.is_empty t.failed_calls) && t.balance > min_balance) in
+      let compare a b = Float.compare (Contract.get_total_failed b) (Contract.get_total_failed a) in
+      List.filter ~f results |> List.sort ~compare
+    in
+    { contracts; total_failed = get_total_failed contracts; }
 end

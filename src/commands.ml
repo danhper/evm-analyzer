@@ -49,4 +49,4 @@ let analyze_unhandled_exception_results
     ?(historical_balance=false) ?(min_balance=0.) ?(min_value=0.) input =
   let module UE = ResultsAnalyzer.UnhandledException in
   let result = Lwt_main.run (UE.analyze_file ~historical_balance ~min_balance ~min_value input) in
-  List.iter ~f:(print_json ~to_json:UE.to_json) result
+  print_json ~to_json:UE.to_json result
