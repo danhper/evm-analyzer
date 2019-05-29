@@ -12,6 +12,7 @@ let consume t ~bytes =
   let len = bytes * 2 in
   if t.index + len > length t then
     let left_bytecode = String.sub t.bytecode ~pos:t.index ~len:(length t - t.index) in
+    t.index <- length t;
     Error left_bytecode
     (* failwith (Printf.sprintf "could not get %d bytes from %s" len left_bytecode) *)
   else
@@ -127,7 +128,7 @@ let consume_full_opcode t =
   | 0xfe -> Invalid
   | 0xff -> Selfdestruct
 
-  | v -> Unknown (Printf.sprintf "0x%x" v)
+  | _ -> Unknown (Printf.sprintf "0x%x" opcode)
 
 
 let normalize_bytecode bytecode =
