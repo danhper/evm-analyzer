@@ -82,4 +82,8 @@ let typ_of =
     of_rpc;
   }
 
+
+let sexp_of_t t = t |> to_hex |> String.sexp_of_t
+let t_of_sexp sexp = sexp |> String.t_of_sexp |> of_hex
+
 include Comparator.Make(T)

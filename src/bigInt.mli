@@ -22,4 +22,7 @@ val twos_complement: t -> int -> t
 
 val limit_bits: t -> int -> t
 
+val sexp_of_t: t -> Sexp.t
+val t_of_sexp: Sexp.t -> t
+
 include Comparator.S with type t := t

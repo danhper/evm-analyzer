@@ -11,6 +11,21 @@ module StackValue = struct
   let copy t = t
 end
 
+module EVMStack = struct
+  include EStack.Funcs
+
+  type t = StackValue.t EStack.t
+end
+
+module EVMStorage = struct
+  type t = (BigInt.t, BigInt.t) Hashtbl.t
+
+  let empty () = Hashtbl.create (module BigInt)
+  let exists t key = Hashtbl.exists t ~f:((=) key)
+  let set t key value = Hashtbl.set t ~key ~data:value
+  let get t key = Hashtbl.find t key |> Option.value ~default:BigInt.zero
+end
+
 module Env = struct
   type t = {
     stack: StackValue.t EStack.t;

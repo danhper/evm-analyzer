@@ -11,9 +11,24 @@ module StackValue: sig
   val copy: t -> t
 end
 
+module EVMStorage: sig
+  type t
+
+  val empty: unit -> t
+  val exists: t -> BigInt.t -> bool
+  val set: t -> BigInt.t -> BigInt.t -> unit
+  val get: t -> BigInt.t -> BigInt.t
+end
+
+module EVMStack: sig
+  include module type of EStack.Funcs
+
+  type t = StackValue.t EStack.t
+end
+
 module Env: sig
   type t = {
-    stack: StackValue.t EStack.t;
+    stack: EVMStack.t;
     block_number: Int.t;
     tx_hash: String.t;
     address: BigInt.t;
