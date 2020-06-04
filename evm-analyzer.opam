@@ -9,7 +9,7 @@ homepage: "https://github.com/danhper/evm-analyzer"
 bug-reports: "https://github.com/danhper/evm-analyzer"
 build: ["dune" "build" "--root" "." "-j" jobs "@install"]
 depends: [
-  "core"                    {>= "v0.11" & < "v0.12"}
+  "core"                    {>= "v0.12" & < "v0.13"}
   "yojson"                  {>= "1.5.0" & < "2.0"}
   "zarith"                  {>= "1.7"   & < "2.0"}
   "ppx_import"              {>= "1.5"   & < "2.0"}
