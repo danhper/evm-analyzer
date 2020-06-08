@@ -19,7 +19,7 @@ let parse_json struct_logs =
 
   let get_result traces =
     (* NOTE: result is the top value in the stack of the next trace *)
-    let get_stack_top json = match member "stack_top" json with
+    let get_stack_top json = match member "stackTop" json with
     | `String s -> s
     | _ -> json |> member "stack" |> to_list |> List.last_exn |> to_string
     in
