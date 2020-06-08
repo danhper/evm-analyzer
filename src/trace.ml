@@ -7,6 +7,6 @@ type t = {
   depth: Int.t;
   pc: Int.t;
   index: Int.t;
-  result: BigInt.t Option.t;
-  children: t List.t;
-}
+  result: BigInt.t option;
+  children: t list;
+} [@@deriving show, eq]

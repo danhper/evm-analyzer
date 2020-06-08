@@ -1,3 +1,8 @@
+(rule
+  (targets "fixtures.ml")
+  (deps ./fixtures/regular_trace_0xdd77a7d375e.json ./fixtures/stripped_trace_0xdd77a7d375e.json)
+  (action (run ../scripts/embed_text_files.sh fixtures.ml fixtures/*.json)))
+
 (test
   (name test)
   (libraries evm_analyzer alcotest))
