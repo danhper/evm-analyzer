@@ -3,7 +3,7 @@ open Core
 module CI = Datalog_caml_interface
 
 
-type t = CI.Logic.DB.t
+type t
 
 
 module Rel4: sig

@@ -23,21 +23,24 @@ module ExecutionResult = struct
     failed: bool;
     truncated: bool;
     traces: Trace.t list;
+    struct_logs: Yojson.Safe.t;
   }
 
   let from_json json =
     let open Yojson.Safe.Util in
+    let struct_logs = member "structLogs" json in
     {
       gas = json |> member "gas" |> to_int;
       failed = json |> member "failed" |> to_bool;
       truncated = json |> member "truncated" |> to_bool;
-      traces = TraceParser.parse_json (member "structLogs" json)
+      traces = TraceParser.parse_json struct_logs;
+      struct_logs;
     }
 end
 
 module SimpleTransaction = struct
   type t = {
-    block_hash: string;
+    hash: string;
     block_number: int;
     to_: string;
     gas: int;
@@ -48,7 +51,7 @@ module SimpleTransaction = struct
   let from_json json =
     let open Yojson.Safe.Util in
     {
-      block_hash = json |> member "hash" |> to_string;
+      hash = json |> member "hash" |> to_string;
       block_number = json |> member "blockNumber" |> to_int;
       to_ = json |> member "to" |> to_string;
       gas = json |> member "gas" |> to_int;

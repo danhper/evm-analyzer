@@ -7,8 +7,9 @@
   (name evm_analyzer)
   (libraries core yojson zarith datalog.caml_interface
              caqti caqti-driver-postgresql caqti-lwt monads
-             rpclib-lwt rpclib.json cohttp-lwt-unix camlzip)
+             rpclib-lwt rpclib.json cohttp-lwt-unix camlzip
+             ppx_deriving_yojson.runtime)
   (preprocess
     (pps ppx_let ppx_deriving ppx_deriving.show ppx_deriving.eq
-         ppx_fields_conv ppx_deriving_rpc))
+         ppx_fields_conv ppx_deriving_rpc ppx_deriving_yojson))
   (public_name evm-analyzer))

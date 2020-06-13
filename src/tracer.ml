@@ -25,15 +25,27 @@ let nested_call_address op args =
     Some (addr.StackValue.value)
   | _ -> None
 
-let execute_traces ?debug:(debug=false) ?db t traces =
+let execute_traces ?debug:(debug=false) ?timeout ?db t traces =
   let db = Option.value ~default:(FactDb.create ()) db in
-  let rec execute_trace ~env ~taggers trace =
-    let open Trace in
+  let start_time = Unix.gettimeofday () in
+  let rec execute_trace ~env ~taggers _acc trace =
     log ~debug ~env trace;
-    match trace.op with
+    let has_timeouted =
+      match timeout with
+      | Some t ->
+        let ellapsed_time = Unix.gettimeofday () -. start_time in
+        ellapsed_time > t
+      | None -> false
+    in
+    if has_timeouted
+      then true
+      else execute_trace' ~env ~taggers trace
+
+  and execute_trace' ~env ~taggers trace =
+    let () = match trace.op with
     | Op.Dup n -> EStack.dup env.Env.stack (n - 1)
     | Op.Swap n -> EStack.swap env.Env.stack (n - 1)
-    | _ -> ();
+    | _ -> () in
     let args_count = Op.input_count trace.op in
     let args = List.rev (List.init args_count ~f:(fun _ -> EStack.pop env.Env.stack)) in
     let result = Option.map ~f:(StackValue.create ~id:trace.Trace.index) trace.result in
@@ -41,13 +53,14 @@ let execute_traces ?debug:(debug=false) ?db t traces =
     List.iter ~f:(fun t -> t db full_trace) taggers;
     Option.iter result ~f:(EStack.push env.Env.stack);
     match trace.Trace.children with
-    | [] -> ()
+    | [] -> false
     | children ->
       let new_address = Option.value ~default:env.address (nested_call_address trace.op args) in
       execute_traces new_address children taggers
   and execute_traces address traces taggers =
     let env = Env.create ~block_number:t.block_number ~tx_hash:t.tx_hash address in
-    List.iter traces ~f:(execute_trace ~env ~taggers:taggers)
+    List.fold ~init:false traces ~f:(execute_trace ~env ~taggers:taggers)
   in
-  List.iter ~f:(execute_traces (BigInt.of_hex t.contract_address) traces) t.taggers;
-  db
+  let result = List.map ~f:(execute_traces (BigInt.of_hex t.contract_address) traces) t.taggers in
+  let timeouted = List.for_all ~f:Fn.id result in
+  (db, timeouted)

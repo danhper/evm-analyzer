@@ -50,14 +50,13 @@ let tag_used_in_condition db { trace; args; _ } =
   | _ -> ()
 
 
-let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; args; _ } =
+let max_value = BigInt.(pow two 256 - one)
+let tag_overflow'' ~name db result { trace; args; _ } =
   let open StackValue in
-  let max_value = BigInt.(pow two 256 - one) in
   let is_gas id = FactDb.get_bool db (Printf.sprintf "is_gas(%d)" id) in
   let negated_const id = FactDb.get_bool db (Printf.sprintf "negated_const(%d)" id) in
-  let should_do_check result a b =
-    should_check result.id
-      && not (is_gas a.id || is_gas b.id) (* gas related computation are inserted by the compiler *)
+  let should_do_check a b =
+      not (is_gas a.id || is_gas b.id) (* gas related computation are inserted by the compiler *)
       && not (negated_const a.id || negated_const b.id) (* compiler inserts ADD (NOT CONST) *)
       (* TODO: check for sload/mload *)
   in
@@ -65,12 +64,24 @@ let tag_overflow ~get_size ~should_check ~cast_value ~name db result { trace; ar
   | Op.Add, (a :: b :: _)
       when a.value = max_value && b.value = BigInt.of_int 256 -> ()
   | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b]
-      when should_do_check result a b ->
-    let output_bits = Option.value ~default:256 (get_size result.id) in
+      when should_do_check a b ->
     let actual_result = Op.execute_binary_op op a.value b.value in
-    let expected_result = cast_value actual_result output_bits in
-    if expected_result <> actual_result then
-      FactDb.add_int_rel1 db name result.id
+    if actual_result >= BigInt.zero && actual_result <= BigInt.of_int 127
+      then ()
+      else
+        let is_signed = FactDb.get_bool db (Printf.sprintf "is_signed(%d)" result.StackValue.id) in
+        let expected_result =
+          if is_signed then
+            let size = FactDb.get_int db 1 (Printf.sprintf "int_size(%d, N)" result.id) in
+            let output_bits = Option.value ~default:256 size in
+            BigInt.twos_complement actual_result output_bits
+          else
+            let size = FactDb.get_int db 1 (Printf.sprintf "uint_size(%d, N)" result.id) in
+            let output_bits = Option.value ~default:256 size in
+            BigInt.limit_bits actual_result output_bits
+        in
+        if expected_result <> actual_result then
+          FactDb.add_int_rel1 db name result.id
   | _ -> ()
 
 let tag_const' db result { trace; _ } =
@@ -88,19 +99,12 @@ let tag_not' db result { trace; _ } =
 let tag_not = with_result tag_not'
 
 
-let tag_signed_overflow' db result full_trace =
-  let should_check id = FactDb.get_bool db (Printf.sprintf "is_signed(%d)" id) in
-  let get_size id = FactDb.get_int db 1 (Printf.sprintf "int_size(%d, N)" id) in
-  tag_overflow ~get_size ~should_check ~cast_value:BigInt.twos_complement ~name:"is_signed_overflow"
-                db result full_trace
-let tag_signed_overflow = with_result tag_signed_overflow'
-
-let tag_unsigned_overflow' db result full_trace =
-  let should_check id = FactDb.get_bool db (Printf.sprintf "is_unsigned(%d)" id) in
-  let get_size id = FactDb.get_int db 1 (Printf.sprintf "uint_size(%d, N)" id) in
-  tag_overflow ~get_size ~should_check ~cast_value:BigInt.limit_bits ~name:"is_unsigned_overflow"
-                db result full_trace
-let tag_unsigned_overflow = with_result tag_unsigned_overflow'
+let tag_overflow' db result ({trace; _} as full_trace) =
+  match trace.op with
+  | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) ->
+    tag_overflow'' ~name:"is_signed_overflow" db result full_trace
+  | _ -> ()
+let tag_overflow = with_result tag_overflow'
 
 let tag_failed_call' db result { trace; _ } =
   match trace.op, result.StackValue.value with
@@ -166,18 +170,17 @@ let all = [
    tag_not;
   ];
 
-  [tag_signed_overflow;
-   tag_unsigned_overflow;
-  ]
+  [tag_overflow;]
 ]
 
 let for_vulnerability vulnerability_type = match vulnerability_type with
   | "integer-overflow" ->
     [[tag_output; tag_uint_size; tag_int_size; tag_signed;
       tag_gas; tag_const; tag_not];
-     [tag_signed_overflow; tag_unsigned_overflow]]
+     [tag_overflow];
+    ]
   | "unhandled-exception" ->
-    [[tag_failed_call; tag_used_in_condition;]]
+    [[tag_output; tag_failed_call; tag_used_in_condition;]]
   | "reentrancy" ->
     [[tag_call;]]
   | "locked-ether" ->
