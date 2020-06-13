@@ -31,6 +31,20 @@ let analyze_traces_command =
       Commands.analyze_traces ~debug ~contract_address input_file query
   ]
 
+let run_full_analysis_command =
+  let open Command.Let_syntax in
+  Command.basic
+  ~summary:"Run full analysis on all transactions in given files"
+  [%map_open
+    let input_file = anon ("input-files" %: string)
+    and output_dir = flag "output" (required string) ~doc:"ouptut directory"
+    and debug = flag "debug" no_arg ~doc:"debug mode" in
+    fun () ->
+      process_debug_flag debug;
+      Commands.run_full_analysis ~output_dir input_file
+  ]
+
+
 let analyze_vulnerabilities_command =
   let open Command.Let_syntax in
   Command.basic
@@ -81,6 +95,7 @@ let analyze_results_command =
 let evm_analyzer_command =
   Command.group ~summary:"Analysis tool for EVM" [
     ("opcodes", opcodes_command);
+    ("run-full-analysis", run_full_analysis_command);
     ("analyze-traces", analyze_traces_command);
     ("analyze-vulnerabilities", analyze_vulnerabilities_command);
     ("analyze-results", analyze_results_command);
