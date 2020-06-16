@@ -50,8 +50,9 @@ let tag_used_in_condition db { trace; args; _ } =
   | _ -> ()
 
 
-let max_value = BigInt.(pow two 256 - one)
-let tag_overflow'' ~name db result { trace; args; _ } =
+let bigint_value_count = BigInt.(pow two 256)
+let bigint_max_value = BigInt.(bigint_value_count - one)
+let tag_overflow'' db result { trace; args; _ } =
   let open StackValue in
   let is_gas id = FactDb.get_bool db (Printf.sprintf "is_gas(%d)" id) in
   let negated_const id = FactDb.get_bool db (Printf.sprintf "negated_const(%d)" id) in
@@ -62,26 +63,35 @@ let tag_overflow'' ~name db result { trace; args; _ } =
   in
   match trace.Trace.op, args with
   | Op.Add, (a :: b :: _)
-      when a.value = max_value && b.value = BigInt.of_int 256 -> ()
+      when a.value = bigint_max_value || b.value = bigint_max_value ||
+           a.value = BigInt.zero || b.value = BigInt.zero -> ()
   | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b]
       when should_do_check a b ->
-    let actual_result = Op.execute_binary_op op a.value b.value in
-    if actual_result >= BigInt.zero && actual_result <= BigInt.of_int 127
+    let actual_result = result.StackValue.value in
+    let expected_result = Op.execute_binary_op op a.value b.value in
+    if expected_result >= BigInt.zero && expected_result <= BigInt.of_int 127
       then ()
       else
         let is_signed = FactDb.get_bool db (Printf.sprintf "is_signed(%d)" result.StackValue.id) in
-        let expected_result =
+        let (bits, expected_result) =
           if is_signed then
             let size = FactDb.get_int db 1 (Printf.sprintf "int_size(%d, N)" result.id) in
             let output_bits = Option.value ~default:256 size in
-            BigInt.twos_complement actual_result output_bits
+            (output_bits, BigInt.twos_complement actual_result output_bits)
           else
             let size = FactDb.get_int db 1 (Printf.sprintf "uint_size(%d, N)" result.id) in
             let output_bits = Option.value ~default:256 size in
-            BigInt.limit_bits actual_result output_bits
+            let expected_result = BigInt.limit_bits actual_result output_bits in
+            (output_bits, BigInt.(
+              if expected_result < zero
+                then expected_result + (pow two output_bits)
+                else expected_result))
         in
         if expected_result <> actual_result then
-          FactDb.add_int_rel1 db name result.id
+          (* let _ = BigInt.(Printf.printf "%s %s %s = %s (!= %s), (%d bits)\n"
+            (to_string a.value) (Op.to_infix_string op) (to_string b.value)
+            (to_string expected_result) (to_string actual_result) bits) in *)
+          FactDb.add_rel5 db FactDb.Relations.overflow (result.id, is_signed, bits, expected_result, actual_result)
   | _ -> ()
 
 let tag_const' db result { trace; _ } =
@@ -102,14 +112,16 @@ let tag_not = with_result tag_not'
 let tag_overflow' db result ({trace; _} as full_trace) =
   match trace.op with
   | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) ->
-    tag_overflow'' ~name:"is_signed_overflow" db result full_trace
+    tag_overflow'' db result full_trace
   | _ -> ()
 let tag_overflow = with_result tag_overflow'
 
-let tag_failed_call' db result { trace; _ } =
-  match trace.op, result.StackValue.value with
-  | Op.Call, v when v = BigInt.zero ->
-    FactDb.add_int_rel1 db "failed_call" result.StackValue.id
+let tag_failed_call' db result { trace; args; _ } =
+  let open StackValue in
+  let failed_call_rel = FactDb.Relations.failed_call in
+  match trace.op, args, result.StackValue.value with
+  | Op.Call, _ :: { value = address; _ } :: { value = value; _ } :: _ , v when v = BigInt.zero ->
+    FactDb.add_rel3 db failed_call_rel (result.StackValue.id, address, value)
   | _ -> ()
 let tag_failed_call = with_result tag_failed_call'
 

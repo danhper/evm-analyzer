@@ -69,6 +69,8 @@ module Relations: sig
   val reentrant_call: (Int.t, BigInt.t, BigInt.t, BigInt.t, BigInt.t) Rel5.t
   val direct_call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
   val call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
+  val failed_call: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
+  val overflow: (Int.t, Bool.t, Int.t, BigInt.t, BigInt.t) Rel5.t
   val tx_sstore: (Int.t, String.t, BigInt.t) CI.Rel3.t
   val tx_sload: (Int.t, String.t, BigInt.t) CI.Rel3.t
   val tod: (Int.t, String.t, String.t, BigInt.t) Rel4.t

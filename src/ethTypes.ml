@@ -43,6 +43,8 @@ module SimpleTransaction = struct
     hash: string;
     block_number: int;
     to_: string;
+    to_balance: string;
+    value: string;
     gas: int;
     gas_price: string;
     result: ExecutionResult.t;
@@ -54,10 +56,22 @@ module SimpleTransaction = struct
       hash = json |> member "hash" |> to_string;
       block_number = json |> member "blockNumber" |> to_int;
       to_ = json |> member "to" |> to_string;
+      to_balance = json |> member "toBalance" |> to_string;
+      value = json |> member "value" |> to_string;
       gas = json |> member "gas" |> to_int;
       gas_price = json |> member "gasPrice" |> to_string;
       result = ExecutionResult.from_json (member "executionResult" json)
     }
+
+  let to_json t = `Assoc [
+      ("hash", `String t.hash);
+      ("blockNumber", `Int t.block_number);
+      ("to", `String t.to_);
+      ("toBalance", `String t.to_balance);
+      ("value", `String t.value);
+      ("gas", `Int t.gas);
+      ("gasPrice", `String t.gas_price);
+    ]
 
   let from_string raw_string =
     let json = Yojson.Safe.from_string raw_string in

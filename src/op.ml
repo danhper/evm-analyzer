@@ -259,3 +259,13 @@ let execute_binary_op op a b =
   | Sdiv -> if b = zero then zero else a / b
   | Exp -> pow a (to_int b)
   | _ -> failwith "op not supported"
+
+let to_infix_string op =
+  match op with
+  | Add -> "+"
+  | Sub -> "-"
+  | Mul -> "*"
+  | Div -> "/"
+  | Sdiv -> "/"
+  | Exp -> "**"
+  | _ -> failwith "op not supported"

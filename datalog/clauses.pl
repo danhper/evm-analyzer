@@ -10,7 +10,7 @@
 % depends(A, B) - A depends directly or indirectly on B
 % depends_on_storage(A) - A depends on storage
 % is_signed(A) - A is signed
-% is_overflow(A) - A is either a signed or unsigned overflow
+% is_overflow(A, S, X, Y) - A is either a signed or unsigned (S) overflow. Result should be X but is Y
 % modified_by_overflow(A) - A depends on a value which overflowed
 % path_modified_by_overflow(A) - the program path is changed by a value modified by an overflow
 % int_size(A, N) - A has an inferred int_size of N
@@ -21,11 +21,8 @@ depends(A, B) :- is_output(A, C), depends(C, B).
 depends_on_storage(A) :- uses_storage(A).
 depends_on_storage(A) :- uses_storage(B), depends(A, B).
 
-is_overflow(A) :- is_unsigned_overflow(A), ~is_signed(A).
-is_overflow(A) :- is_signed_overflow(A), is_signed(A).
-
-modified_by_overflow(A) :- is_overflow(A).
-modified_by_overflow(A) :- is_overflow(B), depends(A, B).
+modified_by_overflow(A) :- is_overflow(A, S, X, Y).
+modified_by_overflow(A) :- is_overflow(B, S, X, Y), depends(A, B).
 
 influences_condition(A) :- used_in_condition(A).
 influences_condition(A) :- depends(B, A), used_in_condition(B).
@@ -35,16 +32,19 @@ negated_const(B) :- is_output(B, A), const(A), not(B).
 path_modified_by_overflow(A) :- modified_by_overflow(A), used_in_condition(A).
 
 is_signed(A) :- is_signed_operand(A).
-is_signed(A) :- depends(A, B), is_signed_operand(B).
+% is_signed(A) :- is_output(B, A), is_signed_operand(B).
+% is_signed(A) :- depends(A, B), is_signed_operand(B).
 is_unsigned(A) :- ~is_signed(A).
 
 int_size(A, N) :- has_int_size(A, N).
-int_size(A, N) :- depends(A, B), has_int_size(B, N).
+% int_size(A, N) :- is_output(B, A), has_int_size(B, N).
+% int_size(A, N) :- depends(A, B), has_int_size(B, N).
 
 uint_size(A, N) :- has_uint_size(A, N).
-uint_size(A, N) :- depends(A, B), has_uint_size(B, N).
+% uint_size(A, N) :- is_output(B, A), has_uint_size(B, N).
+% uint_size(A, N) :- depends(A, B), has_uint_size(B, N).
 
-unhandled_exception(A) :- failed_call(A), ~influences_condition(A).
+unhandled_exception(I, A, V) :- failed_call(I, A, V), ~influences_condition(I).
 
 call(I, A, B, V) :- direct_call(I, A, B, V).
 call(I, A, B, V) :- direct_call(I, A, C, V), call(I2, C, B, V2).
