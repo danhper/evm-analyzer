@@ -266,6 +266,6 @@ let to_infix_string op =
   | Sub -> "-"
   | Mul -> "*"
   | Div -> "/"
-  | Sdiv -> "/"
+  | Sdiv -> "/."
   | Exp -> "**"
   | _ -> failwith "op not supported"

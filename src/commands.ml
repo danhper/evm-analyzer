@@ -24,9 +24,11 @@ let analyze_traces ~debug ~contract_address filepath query =
       let results = FactDb.ask db (FactDb.CI.Parse.term_of_string query) in
       List.iter ~f:(Fn.compose print_endline FactDb.CI.Logic.T.to_string) results
     else
-      let trace_indexes = FactDb.query1 db (FactDb.get_rel1 ~k:FactDb.Types.int query) in
+      let results = VulnerabilityAnalyzer.get_results db query in
+      Yojson.Safe.pretty_to_channel Out_channel.stdout results
+      (* let trace_indexes = FactDb.query1 db (FactDb.get_rel1 ~k:FactDb.Types.int query) in
       let traces = List.map ~f:(Fn.flip Yojson.Safe.Util.index struct_logs) trace_indexes in
-      List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces
+      List.iter ~f:(Fn.compose print_endline Yojson.Safe.to_string) traces *)
 
 
 let analyze_vulnerabilities ?timeout ~output ~addresses vulnerability =

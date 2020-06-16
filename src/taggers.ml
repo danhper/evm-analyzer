@@ -16,14 +16,14 @@ let tag_storage' db result { trace; _ } =
   | _ -> ()
 let tag_storage = with_result tag_storage'
 
-let tag_uint_size' db result { trace; args; _ } =
+let tag_uint_size' db _result { trace; args; _ } =
   match trace.Trace.op, args with
   | Op.And, [a; b] ->
     let succ_a = BigInt.add a.StackValue.value BigInt.one in
     if a.StackValue.value < b.StackValue.value &&
       BigInt.is_power succ_a ~power:16 &&
       BigInt.is_power (BigInt.of_int (BigInt.log ~base:16 succ_a)) ~power:2
-        then FactDb.add_int_rel2 db "has_uint_size" (result.StackValue.id, BigInt.log ~base:2 succ_a)
+        then FactDb.add_int_rel2 db "has_uint_size" (b.StackValue.id, BigInt.log ~base:2 succ_a)
   | _ -> ()
 let tag_uint_size = with_result tag_uint_size'
 
@@ -31,9 +31,9 @@ let tag_signed db { trace; args; _ } =
   match trace.Trace.op, args with
   | Op.Signextend, [_bits; value] ->
     FactDb.add_int_rel1 db "is_signed_operand" value.StackValue.id
-  | (Op.Sdiv | Op.Smod | Op.Slt | Op.Sgt), [a; b] ->
+  (* | (Op.Sdiv | Op.Smod | Op.Slt | Op.Sgt), [a; b] ->
     FactDb.add_int_rel1 db "is_signed_operand" a.StackValue.id;
-    FactDb.add_int_rel1 db "is_signed_operand" b.StackValue.id
+    FactDb.add_int_rel1 db "is_signed_operand" b.StackValue.id *)
   | _ -> ()
 
 let tag_int_size db { trace; args; _ } =
@@ -62,10 +62,13 @@ let tag_overflow'' db result { trace; args; _ } =
       (* TODO: check for sload/mload *)
   in
   match trace.Trace.op, args with
+  (* compiler inserted patterns *)
   | Op.Add, (a :: b :: _)
       when a.value = bigint_max_value || b.value = bigint_max_value ||
            a.value = BigInt.zero || b.value = BigInt.zero -> ()
-  | (Op.Add | Op.Sub | Op.Mul | Op.Div | Op.Sdiv | Op.Exp) as op, [a; b]
+  | Op.Sub, (a :: b :: _)
+      when a.value = BigInt.zero && b.value = BigInt.one -> ()
+  | (Op.Add | Op.Sub | Op.Mul | (* Op.Div | Op.Sdiv | *) Op.Exp) as op, [a; b]
       when should_do_check a b ->
     let actual_result = result.StackValue.value in
     let expected_result = Op.execute_binary_op op a.value b.value in
@@ -81,11 +84,8 @@ let tag_overflow'' db result { trace; args; _ } =
           else
             let size = FactDb.get_int db 1 (Printf.sprintf "uint_size(%d, N)" result.id) in
             let output_bits = Option.value ~default:256 size in
-            let expected_result = BigInt.limit_bits actual_result output_bits in
-            (output_bits, BigInt.(
-              if expected_result < zero
-                then expected_result + (pow two output_bits)
-                else expected_result))
+            (output_bits, if expected_result > BigInt.zero then
+              BigInt.limit_bits actual_result output_bits else expected_result)
         in
         if expected_result <> actual_result then
           (* let _ = BigInt.(Printf.printf "%s %s %s = %s (!= %s), (%d bits)\n"
