@@ -17,6 +17,8 @@
 
 depends(A, B) :- is_output(A, B).
 depends(A, B) :- is_output(A, C), depends(C, B).
+depends(A, B) :- mdepends(A, B).
+depends(A, B) :- mdepends(A, C), depends(C, B).
 
 depends_on_storage(A) :- uses_storage(A).
 depends_on_storage(A) :- uses_storage(B), depends(A, B).
@@ -52,11 +54,22 @@ reentrant_call(I, A, B, V, V2) :- call(I, A, B, V), call(I2, B, A, V2), A != B.
 
 empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).
 
-% tx_sstore(B, T, I).
-% tx_sload(B, T, I).
-tod(B, T, T2, I) :- tx_sstore(B, T, I), tx_sload(B, T2, I), T != T2.
+% tx_sstore(B, T, I, K).
+% tx_sload(B, T, I, K).
+tod(B, T, T2, K) :- tx_sstore(B, T, I, K), tx_sload(B, T2, I2, K), T != T2.
 
 
-caller_check(I) :- caller(I, A).
-caller_influences_condition_before(I) :- caller_check(I2), influences_condition(I2), lt(I2, I).
+caller_influences_condition_before(I) :- caller(I2, A), influences_condition(I2), lt(I2, I).
 unsafe_selfdestruct(I, A) :- selfdestruct(I, A), ~caller_influences_condition_before(I).
+
+depends_on_caller(I) :- caller(I2, A), depends(I, I2).
+unsafe_sstore(I, K) :- tx_sstore(B, T, I, K), ~caller_influences_condition_before(I), ~depends_on_caller(I).
+
+% mdepends_r(I, KStart, Kend)
+% mdepends_w(I, KStart, KEnd)
+
+mdepends(I, I2) :- mdepends_r(I, KStart, KEnd),
+                   mdepends_w(I2, K2Start, K2End),
+                   gte_bi(KStart, K2Start),
+                   lte_bi(K2Start, KEnd),
+                   gt(I, I2).

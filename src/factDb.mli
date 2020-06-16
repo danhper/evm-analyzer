@@ -73,10 +73,13 @@ module Relations: sig
   val call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
   val failed_call: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
   val overflow: (Int.t, Bool.t, Int.t, BigInt.t, BigInt.t) Rel5.t
-  val tx_sstore: (Int.t, String.t, BigInt.t) CI.Rel3.t
-  val tx_sload: (Int.t, String.t, BigInt.t) CI.Rel3.t
+  val tx_sstore: (Int.t, String.t, Int.t, BigInt.t) Rel4.t
+  val tx_sload: (Int.t, String.t, Int.t, BigInt.t) Rel4.t
   val tod: (Int.t, String.t, String.t, BigInt.t) Rel4.t
   val caller: (Int.t, BigInt.t) CI.Rel2.t
   val selfdestruct: (Int.t, BigInt.t) CI.Rel2.t
   val unsafe_selfdestruct: (Int.t, BigInt.t) CI.Rel2.t
+  val unsafe_sstore: (Int.t, BigInt.t) CI.Rel2.t
+  val mdepends_w: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
+  val mdepends_r: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
 end

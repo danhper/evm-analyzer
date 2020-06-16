@@ -150,15 +150,15 @@ let tag_call = with_result tag_call'
 let tag_tx_sstore db { trace; env; args; _ } =
   match trace.op, args with
   | Op.Sstore, key :: _ ->
-    let db_args = (env.Env.block_number, env.Env.tx_hash, key.value) in
-    FactDb.add_rel3 db FactDb.Relations.tx_sstore db_args
+    let db_args = (env.Env.block_number, env.Env.tx_hash, key.id, key.value) in
+    FactDb.add_rel4 db FactDb.Relations.tx_sstore db_args
   | _ -> ()
 
 let tag_tx_sload db { trace; env; args; _ } =
   match trace.op, args with
   | Op.Sload, key :: _ ->
-    let db_args = (env.Env.block_number, env.Env.tx_hash, key.value) in
-    FactDb.add_rel3 db FactDb.Relations.tx_sload db_args
+    let db_args = (env.Env.block_number, env.Env.tx_hash, key.id, key.value) in
+    FactDb.add_rel4 db FactDb.Relations.tx_sload db_args
   | _ -> ()
 
 let tag_gas' db result { trace; _ } =
@@ -180,6 +180,28 @@ let tag_selfdestruct db { trace; args; _ } =
     FactDb.add_rel2 db FactDb.Relations.selfdestruct (id, address)
   | _ -> ()
 
+let tag_mdepends_w db { trace; args; _ } =
+  match trace.op, args with
+  | Op.Mstore, { id = id_offset; value = offset; _ } :: { id = id_value; _ } :: _ ->
+    let mend = BigInt.(offset + of_int 32) in
+    FactDb.add_rel3 db FactDb.Relations.mdepends_w (id_offset, offset, mend);
+    FactDb.add_rel3 db FactDb.Relations.mdepends_w (id_value, offset, mend)
+  | Op.Mstore8, { id = id_offset; value = offset; _ } :: { id = id_value; _ } :: _ ->
+    let mend = BigInt.(offset + one) in
+    FactDb.add_rel3 db FactDb.Relations.mdepends_w (id_offset, offset, mend);
+    FactDb.add_rel3 db FactDb.Relations.mdepends_w (id_value, offset, mend)
+  | _ -> ()
+
+let tag_mdepends_r' db result { trace; args; _ } =
+  match trace.op, args with
+  | Op.Mload, { value = offset; _ } :: _ ->
+    let mend = BigInt.(offset + of_int 32) in
+    FactDb.add_rel3 db FactDb.Relations.mdepends_r (result.StackValue.id, offset, mend);
+  | Op.Keccak256, { value = offset; _ } :: { value = length; _ } :: _ ->
+    let mend = BigInt.(offset + length) in
+    FactDb.add_rel3 db FactDb.Relations.mdepends_r (result.StackValue.id, offset, mend)
+  | _ -> ()
+let tag_mdepends_r = with_result tag_mdepends_r'
 
 
 let all = [
@@ -196,6 +218,10 @@ let all = [
    tag_not;
    tag_sender;
    tag_selfdestruct;
+   tag_tx_sload;
+   tag_tx_sstore;
+   tag_mdepends_w;
+   tag_mdepends_r;
   ];
 
   [tag_overflow;]

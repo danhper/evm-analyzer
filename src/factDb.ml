@@ -124,9 +124,19 @@ let add_lt db =
     (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "lt")
     (fun a b -> a < b)
 
+let add_lt_bi db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:Types.bigint_key ~k2:Types.bigint_key "lt_bi")
+    (fun a b -> a < b)
+
 let add_lte db =
   CI.Rel2.from_fun db
     (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "lte")
+    (fun a b -> a <= b)
+
+let add_lte_bi db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:Types.bigint_key ~k2:Types.bigint_key "lte_bi")
     (fun a b -> a <= b)
 
 let add_gt db =
@@ -134,13 +144,25 @@ let add_gt db =
     (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "gt")
     (fun a b -> a > b)
 
+let add_gt_bi db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:Types.bigint_key ~k2:Types.bigint_key "gte_bi")
+    (fun a b -> a > b)
+
 let add_gte db =
   CI.Rel2.from_fun db
     (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "gte")
     (fun a b -> a >= b)
 
+let add_gte_bi db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:Types.bigint_key ~k2:Types.bigint_key "gte_bi")
+    (fun a b -> a >= b)
+
 let add_comparisons db =
-  List.iter ~f:(fun f -> f db) [add_lt; add_lte; add_gt; add_gte]
+  List.iter ~f:(fun f -> f db) [
+    add_lt; add_lte; add_gt; add_gte;
+    add_lt_bi; add_lte_bi; add_gt_bi; add_gte_bi;]
 
 let create () =
   let db = CI.Logic.DB.create () in
@@ -216,11 +238,15 @@ module Relations = struct
 
   let failed_call = get_rel3 "failed_call" ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
   let overflow = get_rel5 "overflow" ~k1:Types.int ~k2:Types.bool ~k3:Types.int ~k4:Types.bigint_key ~k5:Types.bigint_key
-  let tx_sstore = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.bigint_key "tx_sstore"
-  let tx_sload = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.bigint_key "tx_sload"
+  let tx_sstore = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.int ~k4:Types.bigint_key "tx_sstore"
+  let tx_sload = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.int ~k4:Types.bigint_key "tx_sload"
   let tod = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.string ~k4:Types.bigint_key "tod"
 
   let caller = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "caller"
   let selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "selfdestruct"
   let unsafe_selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "unsafe_selfdestruct"
+  let unsafe_sstore = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "unsafe_sstore"
+
+  let mdepends_w = get_rel3 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key "mdepends_w"
+  let mdepends_r = get_rel3 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key "mdepends_r"
 end
