@@ -55,3 +55,8 @@ empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).
 % tx_sstore(B, T, I).
 % tx_sload(B, T, I).
 tod(B, T, T2, I) :- tx_sstore(B, T, I), tx_sload(B, T2, I), T != T2.
+
+
+caller_check(I) :- caller(I, A).
+caller_influences_condition_before(I) :- caller_check(I2), influences_condition(I2), lt(I2, I).
+unsafe_selfdestruct(I, A) :- selfdestruct(I, A), ~caller_influences_condition_before(I).

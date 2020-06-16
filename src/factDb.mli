@@ -55,6 +55,8 @@ val add_int_rel2: t -> String.t -> (Int.t * Int.t) -> unit
 val add_int_rel3: t -> String.t -> (Int.t * Int.t * Int.t) -> unit
 (* val add_int_rel4: t -> String.t -> (Int.t * Int.t * Int.t * Int.t) -> unit *)
 
+val add_bigint_rel1: t -> String.t -> BigInt.t -> unit
+
 val query1: t -> 'a CI.Rel1.t -> 'a List.t
 val query2: t -> ('a, 'b) CI.Rel2.t -> ('a * 'b) List.t
 val query3: t -> ('a, 'b, 'c) CI.Rel3.t -> ('a * 'b * 'c) List.t
@@ -74,4 +76,7 @@ module Relations: sig
   val tx_sstore: (Int.t, String.t, BigInt.t) CI.Rel3.t
   val tx_sload: (Int.t, String.t, BigInt.t) CI.Rel3.t
   val tod: (Int.t, String.t, String.t, BigInt.t) Rel4.t
+  val caller: (Int.t, BigInt.t) CI.Rel2.t
+  val selfdestruct: (Int.t, BigInt.t) CI.Rel2.t
+  val unsafe_selfdestruct: (Int.t, BigInt.t) CI.Rel2.t
 end

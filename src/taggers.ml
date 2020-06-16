@@ -167,6 +167,20 @@ let tag_gas' db result { trace; _ } =
   | _ -> ()
 let tag_gas = with_result tag_gas'
 
+let tag_sender' db result { trace; _ } =
+  match trace.op with
+  | Op.Caller ->
+    FactDb.add_rel2 db FactDb.Relations.caller (result.StackValue.id, result.StackValue.value)
+  | _ -> ()
+let tag_sender = with_result tag_sender'
+
+let tag_selfdestruct db { trace; args; _ } =
+  match trace.op, args with
+  | Op.Selfdestruct, { id; value = address; _ } :: _ ->
+    FactDb.add_rel2 db FactDb.Relations.selfdestruct (id, address)
+  | _ -> ()
+
+
 
 let all = [
   [tag_output;
@@ -180,6 +194,8 @@ let all = [
    tag_call;
    tag_const;
    tag_not;
+   tag_sender;
+   tag_selfdestruct;
   ];
 
   [tag_overflow;]
@@ -199,5 +215,6 @@ let for_vulnerability vulnerability_type = match vulnerability_type with
     [[tag_empty_delegate_call;]]
   | "tod" ->
     [[tag_tx_sload; tag_tx_sstore;]]
-  | "unrestricted-action" -> [[tag_output;]]
+  | "unrestricted-action" ->
+    [[tag_output; tag_sender; tag_selfdestruct;]]
   | _ -> failwithf "unknown vulnerability %s" vulnerability_type ()

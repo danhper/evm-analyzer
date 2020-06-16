@@ -119,10 +119,34 @@ let add_successor db =
     (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "successor")
     (fun a b -> a = b + 1)
 
+let add_lt db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "lt")
+    (fun a b -> a < b)
+
+let add_lte db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "lte")
+    (fun a b -> a <= b)
+
+let add_gt db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "gt")
+    (fun a b -> a > b)
+
+let add_gte db =
+  CI.Rel2.from_fun db
+    (CI.Rel2.create ~k1:CI.Univ.int ~k2:CI.Univ.int "gte")
+    (fun a b -> a >= b)
+
+let add_comparisons db =
+  List.iter ~f:(fun f -> f db) [add_lt; add_lte; add_gt; add_gte]
+
 let create () =
   let db = CI.Logic.DB.create () in
   CI.add_builtin db;
   add_successor db;
+  add_comparisons db;
   let () = match CI.Parse.parse_string Generated.clauses with
   | `Ok clauses -> CI.Logic.DB.add_clauses db clauses
   | `Error _ -> failwith "could not parse clauses"
@@ -147,6 +171,8 @@ let add_int_rel1 t name arg = add_rel1 t (get_rel1 ~k:Types.int name) arg
 let add_int_rel2 t name args = add_rel2 t (get_rel2 ~k1:Types.int ~k2:Types.int name) args
 let add_int_rel3 t name args = add_rel3 t (get_rel3 ~k1:Types.int ~k2:Types.int ~k3:Types.int name) args
 (* let add_int_rel4 t name args = add_rel4 t (get_rel4 ~k1:Types.int ~k2:Types.int ~k3:Types.int ~k4:Types.int name) args *)
+
+let add_bigint_rel1 t name arg = add_rel1 t (get_rel1 ~k:Types.bigint_key name) arg
 
 let query1 t = CI.Rel1.find t.db
 let query2 t = CI.Rel2.find t.db
@@ -193,4 +219,8 @@ module Relations = struct
   let tx_sstore = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.bigint_key "tx_sstore"
   let tx_sload = get_rel3 ~k1:Types.int ~k2:Types.string ~k3:Types.bigint_key "tx_sload"
   let tod = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.string ~k4:Types.bigint_key "tod"
+
+  let caller = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "caller"
+  let selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "selfdestruct"
+  let unsafe_selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "unsafe_selfdestruct"
 end
