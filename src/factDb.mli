@@ -69,8 +69,9 @@ val get_bool: t -> String.t -> Bool.t
 
 module Relations: sig
   val reentrant_call: (Int.t, BigInt.t, BigInt.t, BigInt.t, BigInt.t) Rel5.t
-  val direct_call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
+  val direct_call: (Int.t, Int.t, BigInt.t, BigInt.t, BigInt.t) Rel5.t
   val call: (Int.t, BigInt.t, BigInt.t, BigInt.t) Rel4.t
+  val delegate_call: (Int.t, BigInt.t) CI.Rel2.t
   val failed_call: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
   val overflow: (Int.t, Bool.t, Int.t, BigInt.t, BigInt.t) Rel5.t
   val tx_sstore: (Int.t, String.t, Int.t, BigInt.t) Rel4.t
@@ -80,6 +81,9 @@ module Relations: sig
   val selfdestruct: (Int.t, BigInt.t) CI.Rel2.t
   val unsafe_selfdestruct: (Int.t, BigInt.t) CI.Rel2.t
   val unsafe_sstore: (Int.t, BigInt.t) CI.Rel2.t
+  val unsafe_call: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
+  val unsafe_delegate_call: (Int.t, BigInt.t) CI.Rel2.t
   val mdepends_w: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
   val mdepends_r: (Int.t, BigInt.t, BigInt.t) CI.Rel3.t
+  val data_load_m: (BigInt.t, BigInt.t) CI.Rel2.t
 end

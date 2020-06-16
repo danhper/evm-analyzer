@@ -48,9 +48,9 @@ uint_size(A, N) :- has_uint_size(A, N).
 
 unhandled_exception(I, A, V) :- failed_call(I, A, V), ~influences_condition(I).
 
-call(I, A, B, V) :- direct_call(I, A, B, V).
-call(I, A, B, V) :- direct_call(I, A, C, V), call(I2, C, B, V2).
-reentrant_call(I, A, B, V, V2) :- call(I, A, B, V), call(I2, B, A, V2), A != B.
+call(I, A, B, V) :- direct_call(I, IV, A, B, V).
+call(I, A, B, V) :- direct_call(I, IV, A, C, V), call(I2, C, B, V2).
+reentrant_call(I, A, B, V, V2) :- call(I, A, B, V), call(I2, B, A, V2), A != B, gt(I, I2).
 
 empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).
 
@@ -68,8 +68,32 @@ unsafe_sstore(I, K) :- tx_sstore(B, T, I, K), ~caller_influences_condition_befor
 % mdepends_r(I, KStart, Kend)
 % mdepends_w(I, KStart, KEnd)
 
-mdepends(I, I2) :- mdepends_r(I, KStart, KEnd),
-                   mdepends_w(I2, K2Start, K2End),
-                   gte_bi(KStart, K2Start),
-                   lte_bi(K2Start, KEnd),
+memory_overlap(ReadStart, WriteStart, WriteEnd) :-
+    gte_bi(ReadStart, WriteStart),
+    lt_bi(ReadStart, WriteEnd).
+
+mdepends(I, I2) :- mdepends_r(I, ReadStart, ReadEnd),
+                   mdepends_w(I2, WriteStart, WriteEnd),
+                   memory_overlap(ReadStart, WriteStart, WriteEnd),
                    gt(I, I2).
+
+depends_on_data(I) :- data_load(I2), depends(I, I2).
+depends_on_data(I) :- depends_on_data(I2), depends(I, I2).
+depends_on_data(I) :- mdepends_r(I, ReadStart, ReadEnd),
+                      data_load_m(WriteStart, WriteEnd),
+                      memory_overlap(ReadStart, WriteStart, WriteEnd).
+
+any_depends_on_data(I1, I2) :- depends_on_data(I1).
+any_depends_on_data(I1, I2) :- depends_on_data(I2).
+
+unsafe_call(IA, A, V) :- direct_call(IA, IV, A, B, V),
+                         any_depends_on_data(IA, IV),
+                         ~caller_influences_condition_before(IA),
+                         ~depends_on_caller(IV),
+                         ~depends_on_caller(IA),
+                         ~is_zero_bi(V).
+
+unsafe_delegate_call(I, A) :-
+    delegate_call(I, A),
+    depends_on_data(I),
+    ~caller_influences_condition_before(I).

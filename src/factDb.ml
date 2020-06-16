@@ -159,10 +159,15 @@ let add_gte_bi db =
     (CI.Rel2.create ~k1:Types.bigint_key ~k2:Types.bigint_key "gte_bi")
     (fun a b -> a >= b)
 
+let is_zero_bi db =
+  CI.Rel1.from_fun db
+    (CI.Rel1.create ~k:Types.bigint_key "is_zero_bi")
+    (fun a -> a = BigInt.zero)
+
 let add_comparisons db =
   List.iter ~f:(fun f -> f db) [
     add_lt; add_lte; add_gt; add_gte;
-    add_lt_bi; add_lte_bi; add_gt_bi; add_gte_bi;]
+    add_lt_bi; add_lte_bi; add_gt_bi; add_gte_bi; is_zero_bi;]
 
 let create () =
   let db = CI.Logic.DB.create () in
@@ -231,10 +236,11 @@ module Relations = struct
                             ~k5:Types.bigint_key
                             "reentrant_call"
 
-  let direct_call = get_rel4 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
-                             ~k4:Types.bigint_key "direct_call"
+  let direct_call = get_rel5 ~k1:Types.int ~k2:Types.int ~k3:Types.bigint_key ~k4:Types.bigint_key
+                             ~k5:Types.bigint_key "direct_call"
   let call = get_rel4 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
-                      ~k4:Types.bigint_key "direct_call"
+                      ~k4:Types.bigint_key "call"
+  let delegate_call = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "delegate_call"
 
   let failed_call = get_rel3 "failed_call" ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
   let overflow = get_rel5 "overflow" ~k1:Types.int ~k2:Types.bool ~k3:Types.int ~k4:Types.bigint_key ~k5:Types.bigint_key
@@ -244,9 +250,13 @@ module Relations = struct
 
   let caller = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "caller"
   let selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "selfdestruct"
+
   let unsafe_selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "unsafe_selfdestruct"
   let unsafe_sstore = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "unsafe_sstore"
+  let unsafe_call = get_rel3 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key "unsafe_call"
+  let unsafe_delegate_call = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "unsafe_delegate_call"
 
   let mdepends_w = get_rel3 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key "mdepends_w"
   let mdepends_r = get_rel3 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key "mdepends_r"
+  let data_load_m = get_rel2 ~k1:Types.bigint_key ~k2:Types.bigint_key "data_load_m"
 end

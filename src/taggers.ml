@@ -129,21 +129,31 @@ let tag_empty_delegate_call' db result { trace; args; _ } =
   let open StackValue in
   let call_entry_rel = FactDb.get_rel2 "call_entry" ~k1:FactDb.Types.int ~k2:FactDb.Types.bigint_key in
   match trace.op, args, result with
-  | (Op.Delegatecall | Op.Staticcall),
+  | (Op.Delegatecall | Op.Staticcall | Op.Callcode),
         { id = top_id; _ ;} :: { value = address; _; } :: _, { id = result_id; _; } ->
     FactDb.add_rel2 db call_entry_rel (top_id, address);
     FactDb.add_int_rel1 db "call_exit" result_id;
   | _ -> ()
 let tag_empty_delegate_call = with_result tag_empty_delegate_call'
 
+let tag_delegate_call' db result { trace; args; _ } =
+  let open StackValue in
+  match trace.op, args with
+  | (Op.Delegatecall | Op.Staticcall | Op.Callcode), _ :: { id; value = address; _; } :: _
+      when result.StackValue.value = BigInt.one ->
+    FactDb.add_rel2 db FactDb.Relations.delegate_call (id, address)
+  | _ -> ()
+let tag_delegate_call = with_result tag_delegate_call'
+
+
 let tag_call' db result { trace; env; args; _ } =
   let module T = FactDb.Types in
   let open Op in
   match trace.op, args with
-  | (Call | Callcode), (gas :: addr :: value :: _rest)
+  | Call, (_ :: addr :: value :: _rest)
       when result.StackValue.value = BigInt.one ->
-    let db_args = (gas.StackValue.id, env.Env.address, addr.value, value.value) in
-    FactDb.add_rel4 db FactDb.Relations.direct_call db_args
+    let db_args = (addr.id, value.id, env.Env.address, addr.value, value.value) in
+    FactDb.add_rel5 db FactDb.Relations.direct_call db_args
   | _ -> ()
 let tag_call = with_result tag_call'
 
@@ -203,6 +213,14 @@ let tag_mdepends_r' db result { trace; args; _ } =
   | _ -> ()
 let tag_mdepends_r = with_result tag_mdepends_r'
 
+let tag_depend_on_data db { trace; args; result; _ } =
+  match trace.op, result, args with
+  | Op.Calldataload, Some r, _ ->
+    FactDb.add_int_rel1 db "depends_on_data" r.StackValue.id
+  | Op.Calldataload, _, { value = mem_offset; _ } :: _ :: { value = length; _ } :: _ ->
+    let mend = BigInt.(mem_offset + length) in
+    FactDb.add_rel2 db FactDb.Relations.data_load_m (mem_offset, mend)
+  | _ -> ()
 
 let all = [
   [tag_output;
@@ -214,6 +232,7 @@ let all = [
    tag_failed_call;
    tag_empty_delegate_call;
    tag_call;
+   tag_delegate_call;
    tag_const;
    tag_not;
    tag_sender;
@@ -222,6 +241,7 @@ let all = [
    tag_tx_sstore;
    tag_mdepends_w;
    tag_mdepends_r;
+   tag_depend_on_data;
   ];
 
   [tag_overflow;]
