@@ -39,8 +39,8 @@ let analyze_vulnerabilities ?timeout ~output ~addresses vulnerability =
   let result = VulnerabilityAnalyzer.analyze_vulnerabilities ~output ?timeout ?addresses vulnerability in
   PgMonad.full_run result
 
-let run_full_analysis input_files ~output_dir =
-  VulnerabilityAnalyzer.analyze_transactions_file ~output_dir input_files
+let run_full_analysis directory ~output_dir =
+  VulnerabilityAnalyzer.analyze_transactions_dir ~output_dir directory
 
 let print_json ~to_json value =
   value |> to_json |> Yojson.Safe.to_string |> print_endline

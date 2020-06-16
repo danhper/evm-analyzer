@@ -36,12 +36,12 @@ let run_full_analysis_command =
   Command.basic
   ~summary:"Run full analysis on all transactions in given files"
   [%map_open
-    let input_file = anon ("input-files" %: string)
+    let input_dir = anon ("input-directory" %: string)
     and output_dir = flag "output" (required string) ~doc:"ouptut directory"
     and debug = flag "debug" no_arg ~doc:"debug mode" in
     fun () ->
       process_debug_flag debug;
-      Commands.run_full_analysis ~output_dir input_file
+      Commands.run_full_analysis ~output_dir input_dir
   ]
 
 

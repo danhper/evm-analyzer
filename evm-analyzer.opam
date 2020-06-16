@@ -22,6 +22,7 @@ depends: [
   "ppx_deriving_rpc"        {>= "7.0"   & < "8.0"}
   "ppx_deriving_yojson"     {>= "3.0"   & < "4.0"}
   "camlzip"                 {>= "1.0"   & < "2.0"}
+  "parmap"                  {>= "1.0"   & < "2.0"}
 
   "monads"
   "datalog"
