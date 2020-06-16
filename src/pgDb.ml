@@ -1,3 +1,4 @@
+open Core
 
 type t = {
   db: Caqti_lwt.connection;
@@ -43,11 +44,25 @@ let vulnerable_contracts_query =
   Caqti_request.collect
     Caqti_type.string Caqti_type.string
     "SELECT DISTINCT address FROM contracts c
-    JOIN vulnerability_reports vr on c.address = vr.contract_address
+    JOIN vulnerability_reports vr ON c.address = vr.contract_address
     WHERE vr.vulnerability_name = ?"
+
+let report_queries =
+  Caqti_request.collect
+    Caqti_type.unit Caqti_type.(tup2 string string)
+    "SELECT vr.contract_address, vr.vulnerability_name FROM vulnerability_reports vr
+      JOIN vulnerabilities v ON vr.vulnerability_name = v.name
+      JOIN tools t ON vr.tool_name = t.name
+      WHERE t.checked AND v.checked"
 
 let get_vulnerable_contracts { db = (module Db: Caqti_lwt.CONNECTION); _ } vulnerability =
   Db.collect_list vulnerable_contracts_query vulnerability
+
+let get_contract_vulnerabilities { db = (module Db: Caqti_lwt.CONNECTION); _ } =
+  let open PgMonad.Let_syntax in
+  let%map reports = Db.collect_list report_queries () in
+  let f acc (address, vuln) = Map.add_multi acc ~key:address ~data:vuln in
+  List.fold reports ~init:String.Map.empty ~f
 
 let get_contract_transactions ?(include_indirect=false) ?(limit=10) ?(offset=0)
     { db = (module Db: Caqti_lwt.CONNECTION); _ } address =

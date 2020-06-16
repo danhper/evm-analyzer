@@ -3,3 +3,4 @@ results/locked-ether.jsonl filter=lfs diff=lfs merge=lfs -text
 results/reentrancy.jsonl filter=lfs diff=lfs merge=lfs -text
 results/integer-overflow.jsonl filter=lfs diff=lfs merge=lfs -text
 results/tod.jsonl filter=lfs diff=lfs merge=lfs -text
+test/fixtures/0xb717a196ef8a20dd1cd91835fd2287704b5edbea7f15483d95f8a231c050118d-dao.json.gz filter=lfs diff=lfs merge=lfs -text

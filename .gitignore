@@ -34,3 +34,4 @@ evm-analyzer.install
 .env
 *.bak
 tmp/
+test/fixtures/0xb717a196ef8a20dd1cd91835fd2287704b5edbea7f15483d95f8a231c050118d-dao.json

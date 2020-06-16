@@ -25,5 +25,6 @@ let format_error error = Caqti_error.show error
 
 let full_run t =
   match Lwt_main.run t with
-  | Ok () -> ()
-  | Error err -> Out_channel.fprintf Out_channel.stderr "%s\n" (format_error err)
+  | Ok v -> v
+  | Error err ->
+    failwithf "%s\n" (format_error err) ()

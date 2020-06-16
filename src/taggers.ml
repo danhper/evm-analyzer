@@ -199,4 +199,5 @@ let for_vulnerability vulnerability_type = match vulnerability_type with
     [[tag_empty_delegate_call;]]
   | "tod" ->
     [[tag_tx_sload; tag_tx_sstore;]]
+  | "unrestricted-action" -> [[tag_output;]]
   | _ -> failwithf "unknown vulnerability %s" vulnerability_type ()
