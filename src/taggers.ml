@@ -136,11 +136,10 @@ let tag_empty_delegate_call' db result { trace; args; _ } =
   | _ -> ()
 let tag_empty_delegate_call = with_result tag_empty_delegate_call'
 
-let tag_delegate_call' db result { trace; args; _ } =
+let tag_delegate_call' db _result { trace; args; _ } =
   let open StackValue in
   match trace.op, args with
-  | (Op.Delegatecall | Op.Staticcall | Op.Callcode), _ :: { id; value = address; _; } :: _
-      when result.StackValue.value = BigInt.one ->
+  | (Op.Delegatecall | Op.Staticcall | Op.Callcode), _ :: { id; value = address; _; } :: _ ->
     FactDb.add_rel2 db FactDb.Relations.delegate_call (id, address)
   | _ -> ()
 let tag_delegate_call = with_result tag_delegate_call'
@@ -248,6 +247,13 @@ let all = [
 ]
 
 let per_block = [[tag_tx_sload; tag_tx_sstore;]]
+let per_tx = [
+  [tag_output; tag_uint_size; tag_int_size; tag_signed;
+   tag_gas; tag_const; tag_not; tag_failed_call; tag_used_in_condition;
+   tag_call; tag_empty_delegate_call; tag_sender; tag_selfdestruct; tag_tx_sstore;
+  ];
+  [tag_overflow];
+]
 
 let for_vulnerability vulnerability_type = match vulnerability_type with
   | "integer-overflow" ->

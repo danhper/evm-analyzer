@@ -27,7 +27,7 @@ modified_by_overflow(A) :- is_overflow(A, S, X, Y).
 modified_by_overflow(A) :- is_overflow(B, S, X, Y), depends(A, B).
 
 influences_condition(A) :- used_in_condition(A).
-influences_condition(A) :- depends(B, A), used_in_condition(B).
+influences_condition(A) :- used_in_condition(B), depends(B, A).
 
 negated_const(B) :- is_output(B, A), const(A), not(B).
 
@@ -63,7 +63,10 @@ caller_influences_condition_before(I) :- caller(I2, A), influences_condition(I2)
 unsafe_selfdestruct(I, A) :- selfdestruct(I, A), ~caller_influences_condition_before(I).
 
 depends_on_caller(I) :- caller(I2, A), depends(I, I2).
-unsafe_sstore(I, K) :- tx_sstore(B, A, T, I, K), ~caller_influences_condition_before(I), ~depends_on_caller(I).
+unsafe_sstore(I, K) :- tx_sstore(B, A, T, I, K), lt(I, 100),
+                       ~depends_on_caller(I),
+                       ~caller_influences_condition_before(I).
+
 
 % mdepends_r(I, KStart, Kend)
 % mdepends_w(I, KStart, KEnd)
@@ -90,8 +93,7 @@ unsafe_call(IA, A, V) :- direct_call(IA, IV, A, B, V),
                          any_depends_on_data(IA, IV),
                          ~caller_influences_condition_before(IA),
                          ~depends_on_caller(IV),
-                         ~depends_on_caller(IA),
-                         ~is_zero_bi(V).
+                         ~depends_on_caller(IA).
 
 unsafe_delegate_call(I, A) :-
     delegate_call(I, A),

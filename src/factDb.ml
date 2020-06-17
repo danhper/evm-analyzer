@@ -169,9 +169,30 @@ let add_comparisons db =
     add_lt; add_lte; add_gt; add_gte;
     add_lt_bi; add_lte_bi; add_gt_bi; add_gte_bi; is_zero_bi;]
 
+let _min t =
+  match t with
+  | CI.Logic.T.Apply (_, [||]) -> None
+  | CI.Logic.T.Apply (_, arr) ->
+    begin try
+      let x = Array.fold
+        ~f:(fun x t' -> match t' with
+          | CI.Logic.T.Apply (v, [| |]) ->
+            begin match x, CI.Univ.unpack ~key:CI.Univ.int v with
+            | None, Some v -> Some v
+            | Some i, Some v when v < i -> Some v
+            | _ -> x
+            end
+          | _ -> raise Exit)
+        ~init:None arr
+      in
+      Option.map ~f:(fun v -> (CI.Logic.T.mk_apply (CI.of_int v) [| |])) x
+    with Exit -> None
+    end
+  | _ -> None
+
 let create () =
-  let db = CI.Logic.DB.create () in
-  CI.add_builtin db;
+  let db = CI.Logic.DB.create () in 
+  CI.Logic.BuiltinFun.add_list (CI.Logic.DB.builtin_funs db) [(CI.of_string "min", _min)];
   add_successor db;
   add_comparisons db;
   let () = match CI.Parse.parse_string Generated.clauses with
@@ -244,7 +265,7 @@ module Relations = struct
 
   let failed_call = get_rel3 "failed_call" ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
   let overflow = get_rel5 "overflow" ~k1:Types.int ~k2:Types.bool ~k3:Types.int ~k4:Types.bigint_key ~k5:Types.bigint_key
-  let tx_sstore = get_rel5 ~k1:Types.int ~k2:Types.bigint_key  ~k3:Types.string ~k4:Types.int ~k5:Types.bigint_key "tx_sstore"
+  let tx_sstore = get_rel5 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.string ~k4:Types.int ~k5:Types.bigint_key "tx_sstore"
   let tx_sload = get_rel5 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.string ~k4:Types.int ~k5:Types.bigint_key "tx_sload"
   let tod = get_rel5 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.string ~k4:Types.string ~k5:Types.bigint_key "tod"
 
