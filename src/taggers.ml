@@ -247,6 +247,8 @@ let all = [
   [tag_overflow;]
 ]
 
+let per_block = [[tag_tx_sload; tag_tx_sstore;]]
+
 let for_vulnerability vulnerability_type = match vulnerability_type with
   | "integer-overflow" ->
     [[tag_output; tag_uint_size; tag_int_size; tag_signed;
