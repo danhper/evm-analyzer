@@ -160,15 +160,15 @@ let tag_call = with_result tag_call'
 let tag_tx_sstore db { trace; env; args; _ } =
   match trace.op, args with
   | Op.Sstore, key :: _ ->
-    let db_args = (env.Env.block_number, env.Env.tx_hash, key.id, key.value) in
-    FactDb.add_rel4 db FactDb.Relations.tx_sstore db_args
+    let db_args = (env.block_number, env.address, env.tx_hash, key.id, key.value) in
+    FactDb.add_rel5 db FactDb.Relations.tx_sstore db_args
   | _ -> ()
 
 let tag_tx_sload db { trace; env; args; _ } =
   match trace.op, args with
   | Op.Sload, key :: _ ->
-    let db_args = (env.Env.block_number, env.Env.tx_hash, key.id, key.value) in
-    FactDb.add_rel4 db FactDb.Relations.tx_sload db_args
+    let db_args = (env.block_number, env.address, env.tx_hash, key.id, key.value) in
+    FactDb.add_rel5 db FactDb.Relations.tx_sload db_args
   | _ -> ()
 
 let tag_gas' db result { trace; _ } =

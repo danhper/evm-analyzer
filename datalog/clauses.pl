@@ -54,16 +54,16 @@ reentrant_call(I, A, B, V, V2) :- call(I, A, B, V), call(I2, B, A, V2), A != B, 
 
 empty_delegate(A) :- call_entry(V, A), call_exit(V2), successor(V2, V).
 
-% tx_sstore(B, T, I, K).
-% tx_sload(B, T, I, K).
-tod(B, T, T2, K) :- tx_sstore(B, T, I, K), tx_sload(B, T2, I2, K), T != T2.
+% tx_sstore(Block, Address, Tx, Index, Key).
+% tx_sload(Block, Address, Tx, Index, Key).
+tod(B, A, T, T2, K) :- tx_sstore(B, A, T, I, K), tx_sload(B, A, T2, I2, K), T != T2.
 
 
 caller_influences_condition_before(I) :- caller(I2, A), influences_condition(I2), lt(I2, I).
 unsafe_selfdestruct(I, A) :- selfdestruct(I, A), ~caller_influences_condition_before(I).
 
 depends_on_caller(I) :- caller(I2, A), depends(I, I2).
-unsafe_sstore(I, K) :- tx_sstore(B, T, I, K), ~caller_influences_condition_before(I), ~depends_on_caller(I).
+unsafe_sstore(I, K) :- tx_sstore(B, A, T, I, K), ~caller_influences_condition_before(I), ~depends_on_caller(I).
 
 % mdepends_r(I, KStart, Kend)
 % mdepends_w(I, KStart, KEnd)

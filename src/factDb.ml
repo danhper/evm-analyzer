@@ -244,9 +244,9 @@ module Relations = struct
 
   let failed_call = get_rel3 "failed_call" ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.bigint_key
   let overflow = get_rel5 "overflow" ~k1:Types.int ~k2:Types.bool ~k3:Types.int ~k4:Types.bigint_key ~k5:Types.bigint_key
-  let tx_sstore = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.int ~k4:Types.bigint_key "tx_sstore"
-  let tx_sload = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.int ~k4:Types.bigint_key "tx_sload"
-  let tod = get_rel4 ~k1:Types.int ~k2:Types.string ~k3:Types.string ~k4:Types.bigint_key "tod"
+  let tx_sstore = get_rel5 ~k1:Types.int ~k2:Types.bigint_key  ~k3:Types.string ~k4:Types.int ~k5:Types.bigint_key "tx_sstore"
+  let tx_sload = get_rel5 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.string ~k4:Types.int ~k5:Types.bigint_key "tx_sload"
+  let tod = get_rel5 ~k1:Types.int ~k2:Types.bigint_key ~k3:Types.string ~k4:Types.string ~k5:Types.bigint_key "tod"
 
   let caller = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "caller"
   let selfdestruct = get_rel2 ~k1:Types.int ~k2:Types.bigint_key "selfdestruct"
