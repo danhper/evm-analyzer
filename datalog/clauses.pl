@@ -63,7 +63,7 @@ caller_influences_condition_before(I) :- caller(I2, A), influences_condition(I2)
 unsafe_selfdestruct(I, A) :- selfdestruct(I, A), ~caller_influences_condition_before(I).
 
 depends_on_caller(I) :- caller(I2, A), depends(I, I2).
-unsafe_sstore(I, K) :- tx_sstore(B, A, T, I, K), lt(I, 100),
+unsafe_sstore(I, K) :- tx_sstore(B, A, T, I, K), lt(I, 1000),
                        ~depends_on_caller(I),
                        ~caller_influences_condition_before(I).
 

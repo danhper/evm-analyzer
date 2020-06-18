@@ -38,10 +38,12 @@ let run_full_analysis_command =
   [%map_open
     let input_dir = anon ("input-directory" %: string)
     and output_dir = flag "output" (required string) ~doc:"ouptut directory"
-    and debug = flag "debug" no_arg ~doc:"debug mode" in
+    and debug = flag "debug" no_arg ~doc:"debug mode"
+    and check_all = flag "check-all" no_arg ~doc:"run all checks on all transactions"
+    in
     fun () ->
       process_debug_flag debug;
-      Commands.run_full_analysis ~output_dir input_dir
+      Commands.run_full_analysis ~check_all ~output_dir input_dir
   ]
 
 

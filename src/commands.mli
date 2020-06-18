@@ -4,7 +4,7 @@ val opcodes_command: ?output:String.t -> show_pc:bool -> show_sourcemap:bool -> 
 
 val analyze_traces: debug:bool -> contract_address:String.t Option.t -> String.t -> String.t -> unit
 
-val run_full_analysis: String.t -> output_dir:String.t -> unit
+val run_full_analysis: String.t -> check_all:bool -> output_dir:String.t -> unit
 
 val analyze_vulnerabilities: ?timeout:Float.t -> output:String.t -> addresses:String.t List.t -> String.t -> unit
 
