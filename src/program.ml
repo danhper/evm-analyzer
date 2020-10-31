@@ -125,7 +125,7 @@ let json_version json =
   | v -> failwithf "unknown value for schemaVersion: %s" (to_string v) ()
 
 
-let of_json_version_2 ?(filename=None) json =
+let of_json_version_2_or_3 ?(filename=None) json =
   let open Yojson.Safe.Util in
   let open Contract in
   let bytecode = json |> member "deployedBytecode" |> to_string in
@@ -194,7 +194,7 @@ let of_json ?(filename=None) json_string =
   let json = json_string |> Yojson.Safe.from_string in
   match json_version json with
   | 1 -> of_json_version_1 ~filename json
-  | 2 -> of_json_version_2 ~filename json
+  | 2 | 3 -> of_json_version_2_or_3 ~filename json
   | n -> failwithf "unsupported schema version %d" n ()
 
 let of_bytecode ?(filename=None) bytecode =

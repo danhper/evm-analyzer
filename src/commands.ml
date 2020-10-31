@@ -13,7 +13,8 @@ let opcodes_command ?contract_name ?output ~show_pc ~show_sourcemap input_file =
 
 
 let analyze_traces ~debug ~contract_address filepath query =
-  let json = Yojson.Safe.from_file filepath in
+  let (module M) = (Channel.module_for filepath) in
+  let json = Yojson.Safe.from_string (M.read_all filepath) in
   let struct_logs = Yojson.Safe.Util.member "structLogs" json in
   let traces = TraceParser.parse_json struct_logs in
   let contract_address = Option.value ~default:"0x0" contract_address in

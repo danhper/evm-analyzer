@@ -5,35 +5,40 @@ module Channel_helpers = struct
   module type S = sig
     type t
     val to_stream: t -> string Stream.t
+    val read_all: string -> string
   end
 
   module type M = sig
     type t
     val input_line: t -> string option
+    val input_all: t -> string
+    val with_file: string -> f:(t -> 'a) -> 'a
   end
 
   module Make(Mod: M): S with type t := Mod.t = struct
     let to_stream ch = Stream.from (fun _ -> Mod.input_line ch)
+    let read_all filename = Mod.with_file ~f:Mod.input_all filename
   end
 end
 
 module type S = sig
   type t
-  val with_file: string -> f:(t -> 'a) -> 'a
   val iter_lines: t -> f:(string -> unit) -> unit
   val fold_lines: t -> init:'a -> f:('a -> string -> 'a) -> 'a
   val cat_command: string
   include Channel_helpers.S with type t := t
+  include Channel_helpers.M with type t := t
 end
 
 module Text_channel: S = struct
   module T = struct
     type t = In_channel.t
     let input_line ch = In_channel.input_line ch
+    let with_file filename ~f = In_channel.with_file filename ~f
+    let input_all ch = In_channel.input_all ch
   end
   include T
   include Channel_helpers.Make(T)
-  let with_file filename ~f = In_channel.with_file filename ~f
   let iter_lines ch ~f = In_channel.iter_lines ch ~f
   let fold_lines ch ~init ~f = In_channel.fold_lines ch ~f ~init
   let cat_command = "cat"
@@ -47,6 +52,14 @@ module Gzip_channel: S = struct
       buf: Bytes.t;
       mutable buf_available: int;
       mutable buf_pos: int;
+    }
+
+    let create ?buffer_size:(size=1024) filename = {
+      stream = Gzip.open_in filename;
+      buf_size = size;
+      buf = Bytes.create size;
+      buf_available = 0;
+      buf_pos = 0;
     }
 
     let renew_buffer ch =
@@ -70,29 +83,30 @@ module Gzip_channel: S = struct
         Buffer.add_char buf c;
         read_until_eol ch buf
 
+  let with_file filename ~f =
+    let finalizer = fun ch -> Gzip.close_in ch.stream in
+    Exn.protectx (create filename) ~f ~finally:finalizer
+
     let input_line ch =
       let buf = Buffer.create 1024 in
       let _ = try read_until_eol ch buf with End_of_file -> () in
       if (Buffer.length buf) = 0
       then None
       else Some (Buffer.contents buf)
+
+    let input_all ch =
+      let buffer = Buffer.create 1024 in
+      try
+        while true do
+          Buffer.add_char buffer (input_char ch)
+        done;
+        failwithf "unreachable" ();
+      with End_of_file -> Buffer.contents buffer
   end
 
   include T
 
-  let create ?buffer_size:(size=1024) filename = {
-    stream = Gzip.open_in filename;
-    buf_size = size;
-    buf = Bytes.create size;
-    buf_available = 0;
-    buf_pos = 0;
-  }
-
   let cat_command = "zcat"
-
-  let with_file filename ~f =
-    let finalizer = fun ch -> Gzip.close_in ch.stream in
-    Exn.protectx (create filename) ~f ~finally:finalizer
 
   let iter_lines ch ~f = Stream.iter f (Stream.from (fun _ -> input_line ch))
 
