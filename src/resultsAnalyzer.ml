@@ -2,15 +2,21 @@ open Core
 
 module Util = struct
   let get_address json = Yojson.Safe.Util.(json |> member "address" |> to_string)
-  let get_results json = Yojson.Safe.Util.(json |> member "result" |> to_assoc)
-  let get_concat_results ~f json =
-    let results = get_results json in
+  let get_results json = Yojson.Safe.Util.(json |> member "result")
+  let get_concat_results ~f results =
     let get_list_value (tx_hash, values) =
       let module U = Yojson.Safe.Util in
       let f value = `Assoc (("tx_hash", `String tx_hash) :: U.to_assoc value) in
       List.map ~f (U.to_list values)
     in
     List.map ~f (List.bind ~f:get_list_value results)
+
+  let extract_results ~f json =
+    let raw_results = get_results json in
+    match raw_results with
+    | `Assoc assoc -> get_concat_results ~f assoc
+    | `List results -> List.map ~f results
+    | _ -> failwithf "result must be a dict or a list" ()
 end
 
 module Reentrancy = struct
@@ -22,7 +28,7 @@ module Reentrancy = struct
   let analyze ?(min_value=0.) contract =
     let open ReentrantCall in
     let address = Util.get_address contract in
-    let concatted = Util.get_concat_results ~f:ReentrantCall.of_json contract in
+    let concatted = Util.extract_results ~f:ReentrantCall.of_json contract in
     let process_call acc call =
       let make_update address amount =
         let current_value = Option.value ~default:0. (Map.find acc address) in
@@ -162,7 +168,7 @@ module UnhandledException = struct
   let analyze ?(historical_balance=false) ?(min_value=0.) ~rpc contract =
     let open Contract in
     let address = Util.get_address contract in
-    let concatted = Util.get_concat_results ~f:FailedCall.of_json contract in
+    let concatted = Util.extract_results ~f:FailedCall.of_json contract in
     let filter = is_call in
     let fulfills_value call =
       match call.FailedCall.ether with
