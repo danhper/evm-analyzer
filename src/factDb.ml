@@ -192,6 +192,7 @@ let _min t =
 
 let create () =
   let db = CI.Logic.DB.create () in 
+  CI.add_builtin db;
   CI.Logic.BuiltinFun.add_list (CI.Logic.DB.builtin_funs db) [(CI.of_string "min", _min)];
   add_successor db;
   add_comparisons db;
