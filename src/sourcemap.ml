@@ -41,4 +41,7 @@ let of_list mappings =
   mappings |> List.fold ~init:[] ~f |> List.rev
 
 
-let of_string string = string |> String.split ~on:';' |> of_list
+let of_string string =
+  if string = ""
+    then []
+    else string |> String.split ~on:';' |> of_list

@@ -25,7 +25,7 @@ type t = {
   filename: String.t Option.t;
 }
 
-val format_ops: ?contract:String.t Option.t -> ?show_pc:bool -> ?show_sourcemap:bool -> t -> String.t
+val format_ops: ?contract_name:String.t Option.t -> ?show_pc:bool -> ?show_sourcemap:bool -> t -> String.t
 
 val of_json: ?filename:String.t Option.t -> String.t -> t
 val of_bytecode: ?filename:String.t Option.t -> String.t -> t

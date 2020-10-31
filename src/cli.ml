@@ -12,9 +12,10 @@ let opcodes_command =
     let input_file = anon ("input-file" %: string)
     and show_pc = flag "show-pc" no_arg ~doc:"show program counter"
     and show_sourcemap = flag "show-sourcemap" no_arg ~doc:"show sourcemap"
+    and contract_name = flag "contract-name" (optional string) ~doc:"contract to show for combined JSON"
     and output = flag "output" (optional string) ~doc:"ouptut file" in
     fun () ->
-      Commands.opcodes_command ?output ~show_pc ~show_sourcemap input_file
+      Commands.opcodes_command ?contract_name ?output ~show_pc ~show_sourcemap input_file
   ]
 
 let analyze_traces_command =

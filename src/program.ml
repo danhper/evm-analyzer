@@ -17,6 +17,11 @@ module Contract = struct
     sourcemap: Sourcemap.t Option.t;
   }
 
+  let get_simple_name { name; _ } =
+    match String.split ~on:':' name with
+    | [x] -> x
+    | list -> List.last_exn list
+
   let get_position offset ranges =
     let rec search left right =
       if left + 1 >= right then (left + 1, offset - ranges.(left))
@@ -62,7 +67,7 @@ module Contract = struct
           begin match List.findi sources ~f with
           | None -> "NA"
           | Some (index, source) ->
-            let prefix = if List.length sources = 1 then "" else source.body in
+            let prefix = if List.length sources = 1 then "" else source.filename ^ ":" in
             let ranges = List.nth_exn all_ranges index in
             let (start_line, start_col) = get_position mapping.start ranges in
             let (stop_line, stop_col) = get_position stop ranges in
@@ -97,13 +102,17 @@ type t = {
   filename: String.t Option.t;
 }
 
-let format_ops ?contract:(contract_name=None) ?(show_pc=false) ?(show_sourcemap=false) t =
+let format_ops ?(contract_name=None) ?(show_pc=false) ?(show_sourcemap=false) t =
+  let available_contracts = String.concat ~sep:", " (List.map ~f:(fun c -> Contract.get_simple_name c) t.contracts) in
   let contract = match contract_name with
-  | None -> List.hd_exn t.contracts
-  | Some name -> List.find_exn ~f:(fun v -> v.Contract.name = name) t.contracts
+  | None -> List.hd t.contracts
+  | Some name -> List.find ~f:(fun c -> Contract.get_simple_name c = name) t.contracts
   in
-  Contract.format_ops ~show_pc ~show_sourcemap contract
-
+  match contract with
+  | None ->
+    failwithf "contract not found, available: %s" available_contracts ()
+  | Some contract ->
+    Contract.format_ops ~show_pc ~show_sourcemap contract
 
 let json_version json =
   let open Yojson.Safe.Util in
